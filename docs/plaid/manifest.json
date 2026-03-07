@@ -1,0 +1,1422 @@
+[
+  {
+    "path": "/docs/",
+    "source_url": "https://plaid.com/docs/",
+    "output_file": "docs/plaid/index.md"
+  },
+  {
+    "path": "/docs/account/",
+    "source_url": "https://plaid.com/docs/account/",
+    "output_file": "docs/plaid/account/index.md"
+  },
+  {
+    "path": "/docs/account/activity/",
+    "source_url": "https://plaid.com/docs/account/activity/",
+    "output_file": "docs/plaid/account/activity/index.md"
+  },
+  {
+    "path": "/docs/account/billing/",
+    "source_url": "https://plaid.com/docs/account/billing/",
+    "output_file": "docs/plaid/account/billing/index.md"
+  },
+  {
+    "path": "/docs/account/resellers/",
+    "source_url": "https://plaid.com/docs/account/resellers/",
+    "output_file": "docs/plaid/account/resellers/index.md"
+  },
+  {
+    "path": "/docs/account/security/",
+    "source_url": "https://plaid.com/docs/account/security/",
+    "output_file": "docs/plaid/account/security/index.md"
+  },
+  {
+    "path": "/docs/account/teams/",
+    "source_url": "https://plaid.com/docs/account/teams/",
+    "output_file": "docs/plaid/account/teams/index.md"
+  },
+  {
+    "path": "/docs/api/",
+    "source_url": "https://plaid.com/docs/api/",
+    "output_file": "docs/plaid/api/index.md"
+  },
+  {
+    "path": "/docs/api/accounts/",
+    "source_url": "https://plaid.com/docs/api/accounts/",
+    "output_file": "docs/plaid/api/accounts/index.md"
+  },
+  {
+    "path": "/docs/api/consent/",
+    "source_url": "https://plaid.com/docs/api/consent/",
+    "output_file": "docs/plaid/api/consent/index.md"
+  },
+  {
+    "path": "/docs/api/institutions/",
+    "source_url": "https://plaid.com/docs/api/institutions/",
+    "output_file": "docs/plaid/api/institutions/index.md"
+  },
+  {
+    "path": "/docs/api/items/",
+    "source_url": "https://plaid.com/docs/api/items/",
+    "output_file": "docs/plaid/api/items/index.md"
+  },
+  {
+    "path": "/docs/api/kyc-aml-users/",
+    "source_url": "https://plaid.com/docs/api/kyc-aml-users/",
+    "output_file": "docs/plaid/api/kyc-aml-users/index.md"
+  },
+  {
+    "path": "/docs/api/libraries/",
+    "source_url": "https://plaid.com/docs/api/libraries/",
+    "output_file": "docs/plaid/api/libraries/index.md"
+  },
+  {
+    "path": "/docs/api/link/",
+    "source_url": "https://plaid.com/docs/api/link/",
+    "output_file": "docs/plaid/api/link/index.md"
+  },
+  {
+    "path": "/docs/api/network/",
+    "source_url": "https://plaid.com/docs/api/network/",
+    "output_file": "docs/plaid/api/network/index.md"
+  },
+  {
+    "path": "/docs/api/oauth/",
+    "source_url": "https://plaid.com/docs/api/oauth/",
+    "output_file": "docs/plaid/api/oauth/index.md"
+  },
+  {
+    "path": "/docs/api/partner/",
+    "source_url": "https://plaid.com/docs/api/partner/",
+    "output_file": "docs/plaid/api/partner/index.md"
+  },
+  {
+    "path": "/docs/api/postman/",
+    "source_url": "https://plaid.com/docs/api/postman/",
+    "output_file": "docs/plaid/api/postman/index.md"
+  },
+  {
+    "path": "/docs/api/processor-partners/",
+    "source_url": "https://plaid.com/docs/api/processor-partners/",
+    "output_file": "docs/plaid/api/processor-partners/index.md"
+  },
+  {
+    "path": "/docs/api/processors/",
+    "source_url": "https://plaid.com/docs/api/processors/",
+    "output_file": "docs/plaid/api/processors/index.md"
+  },
+  {
+    "path": "/docs/api/products/assets/",
+    "source_url": "https://plaid.com/docs/api/products/assets/",
+    "output_file": "docs/plaid/api/products/assets/index.md"
+  },
+  {
+    "path": "/docs/api/products/auth/",
+    "source_url": "https://plaid.com/docs/api/products/auth/",
+    "output_file": "docs/plaid/api/products/auth/index.md"
+  },
+  {
+    "path": "/docs/api/products/beacon/",
+    "source_url": "https://plaid.com/docs/api/products/beacon/",
+    "output_file": "docs/plaid/api/products/beacon/index.md"
+  },
+  {
+    "path": "/docs/api/products/check/",
+    "source_url": "https://plaid.com/docs/api/products/check/",
+    "output_file": "docs/plaid/api/products/check/index.md"
+  },
+  {
+    "path": "/docs/api/products/enrich/",
+    "source_url": "https://plaid.com/docs/api/products/enrich/",
+    "output_file": "docs/plaid/api/products/enrich/index.md"
+  },
+  {
+    "path": "/docs/api/products/identity-verification/",
+    "source_url": "https://plaid.com/docs/api/products/identity-verification/",
+    "output_file": "docs/plaid/api/products/identity-verification/index.md"
+  },
+  {
+    "path": "/docs/api/products/identity/",
+    "source_url": "https://plaid.com/docs/api/products/identity/",
+    "output_file": "docs/plaid/api/products/identity/index.md"
+  },
+  {
+    "path": "/docs/api/products/income/",
+    "source_url": "https://plaid.com/docs/api/products/income/",
+    "output_file": "docs/plaid/api/products/income/index.md"
+  },
+  {
+    "path": "/docs/api/products/investments-move/",
+    "source_url": "https://plaid.com/docs/api/products/investments-move/",
+    "output_file": "docs/plaid/api/products/investments-move/index.md"
+  },
+  {
+    "path": "/docs/api/products/investments/",
+    "source_url": "https://plaid.com/docs/api/products/investments/",
+    "output_file": "docs/plaid/api/products/investments/index.md"
+  },
+  {
+    "path": "/docs/api/products/layer/",
+    "source_url": "https://plaid.com/docs/api/products/layer/",
+    "output_file": "docs/plaid/api/products/layer/index.md"
+  },
+  {
+    "path": "/docs/api/products/liabilities/",
+    "source_url": "https://plaid.com/docs/api/products/liabilities/",
+    "output_file": "docs/plaid/api/products/liabilities/index.md"
+  },
+  {
+    "path": "/docs/api/products/monitor/",
+    "source_url": "https://plaid.com/docs/api/products/monitor/",
+    "output_file": "docs/plaid/api/products/monitor/index.md"
+  },
+  {
+    "path": "/docs/api/products/payment-initiation/",
+    "source_url": "https://plaid.com/docs/api/products/payment-initiation/",
+    "output_file": "docs/plaid/api/products/payment-initiation/index.md"
+  },
+  {
+    "path": "/docs/api/products/protect/",
+    "source_url": "https://plaid.com/docs/api/products/protect/",
+    "output_file": "docs/plaid/api/products/protect/index.md"
+  },
+  {
+    "path": "/docs/api/products/signal/",
+    "source_url": "https://plaid.com/docs/api/products/signal/",
+    "output_file": "docs/plaid/api/products/signal/index.md"
+  },
+  {
+    "path": "/docs/api/products/statements/",
+    "source_url": "https://plaid.com/docs/api/products/statements/",
+    "output_file": "docs/plaid/api/products/statements/index.md"
+  },
+  {
+    "path": "/docs/api/products/transactions/",
+    "source_url": "https://plaid.com/docs/api/products/transactions/",
+    "output_file": "docs/plaid/api/products/transactions/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/",
+    "output_file": "docs/plaid/api/products/transfer/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/account-linking/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/account-linking/",
+    "output_file": "docs/plaid/api/products/transfer/account-linking/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/initiating-transfers/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/initiating-transfers/",
+    "output_file": "docs/plaid/api/products/transfer/initiating-transfers/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/ledger/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/ledger/",
+    "output_file": "docs/plaid/api/products/transfer/ledger/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/metrics/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/metrics/",
+    "output_file": "docs/plaid/api/products/transfer/metrics/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/platform-payments/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/platform-payments/",
+    "output_file": "docs/plaid/api/products/transfer/platform-payments/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/reading-transfers/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/reading-transfers/",
+    "output_file": "docs/plaid/api/products/transfer/reading-transfers/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/recurring-transfers/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/recurring-transfers/",
+    "output_file": "docs/plaid/api/products/transfer/recurring-transfers/index.md"
+  },
+  {
+    "path": "/docs/api/products/transfer/refunds/",
+    "source_url": "https://plaid.com/docs/api/products/transfer/refunds/",
+    "output_file": "docs/plaid/api/products/transfer/refunds/index.md"
+  },
+  {
+    "path": "/docs/api/products/virtual-accounts/",
+    "source_url": "https://plaid.com/docs/api/products/virtual-accounts/",
+    "output_file": "docs/plaid/api/products/virtual-accounts/index.md"
+  },
+  {
+    "path": "/docs/api/sandbox/",
+    "source_url": "https://plaid.com/docs/api/sandbox/",
+    "output_file": "docs/plaid/api/sandbox/index.md"
+  },
+  {
+    "path": "/docs/api/users/",
+    "source_url": "https://plaid.com/docs/api/users/",
+    "output_file": "docs/plaid/api/users/index.md"
+  },
+  {
+    "path": "/docs/api/users/user-apis/",
+    "source_url": "https://plaid.com/docs/api/users/user-apis/",
+    "output_file": "docs/plaid/api/users/user-apis/index.md"
+  },
+  {
+    "path": "/docs/api/versioning/",
+    "source_url": "https://plaid.com/docs/api/versioning/",
+    "output_file": "docs/plaid/api/versioning/index.md"
+  },
+  {
+    "path": "/docs/api/webhooks/",
+    "source_url": "https://plaid.com/docs/api/webhooks/",
+    "output_file": "docs/plaid/api/webhooks/index.md"
+  },
+  {
+    "path": "/docs/api/webhooks/webhook-verification/",
+    "source_url": "https://plaid.com/docs/api/webhooks/webhook-verification/",
+    "output_file": "docs/plaid/api/webhooks/webhook-verification/index.md"
+  },
+  {
+    "path": "/docs/assets/",
+    "source_url": "https://plaid.com/docs/assets/",
+    "output_file": "docs/plaid/assets/index.md"
+  },
+  {
+    "path": "/docs/assets/add-to-app/",
+    "source_url": "https://plaid.com/docs/assets/add-to-app/",
+    "output_file": "docs/plaid/assets/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/assets/partnerships/",
+    "source_url": "https://plaid.com/docs/assets/partnerships/",
+    "output_file": "docs/plaid/assets/partnerships/index.md"
+  },
+  {
+    "path": "/docs/assets/partnerships/alloy/",
+    "source_url": "https://plaid.com/docs/assets/partnerships/alloy/",
+    "output_file": "docs/plaid/assets/partnerships/alloy/index.md"
+  },
+  {
+    "path": "/docs/assets/partnerships/ocrolus/",
+    "source_url": "https://plaid.com/docs/assets/partnerships/ocrolus/",
+    "output_file": "docs/plaid/assets/partnerships/ocrolus/index.md"
+  },
+  {
+    "path": "/docs/auth/",
+    "source_url": "https://plaid.com/docs/auth/",
+    "output_file": "docs/plaid/auth/index.md"
+  },
+  {
+    "path": "/docs/auth/add-to-app/",
+    "source_url": "https://plaid.com/docs/auth/add-to-app/",
+    "output_file": "docs/plaid/auth/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/",
+    "source_url": "https://plaid.com/docs/auth/coverage/",
+    "output_file": "docs/plaid/auth/coverage/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/automated/",
+    "source_url": "https://plaid.com/docs/auth/coverage/automated/",
+    "output_file": "docs/plaid/auth/coverage/automated/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/database-auth/",
+    "source_url": "https://plaid.com/docs/auth/coverage/database-auth/",
+    "output_file": "docs/plaid/auth/coverage/database-auth/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/database/",
+    "source_url": "https://plaid.com/docs/auth/coverage/database/",
+    "output_file": "docs/plaid/auth/coverage/database/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/flow-options/",
+    "source_url": "https://plaid.com/docs/auth/coverage/flow-options/",
+    "output_file": "docs/plaid/auth/coverage/flow-options/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/instant/",
+    "source_url": "https://plaid.com/docs/auth/coverage/instant/",
+    "output_file": "docs/plaid/auth/coverage/instant/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/microdeposit-events/",
+    "source_url": "https://plaid.com/docs/auth/coverage/microdeposit-events/",
+    "output_file": "docs/plaid/auth/coverage/microdeposit-events/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/same-day-link-best-practices/",
+    "source_url": "https://plaid.com/docs/auth/coverage/same-day-link-best-practices/",
+    "output_file": "docs/plaid/auth/coverage/same-day-link-best-practices/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/same-day/",
+    "source_url": "https://plaid.com/docs/auth/coverage/same-day/",
+    "output_file": "docs/plaid/auth/coverage/same-day/index.md"
+  },
+  {
+    "path": "/docs/auth/coverage/testing/",
+    "source_url": "https://plaid.com/docs/auth/coverage/testing/",
+    "output_file": "docs/plaid/auth/coverage/testing/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/",
+    "output_file": "docs/plaid/auth/partnerships/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/achq/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/achq/",
+    "output_file": "docs/plaid/auth/partnerships/achq/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/adp-roll/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/adp-roll/",
+    "output_file": "docs/plaid/auth/partnerships/adp-roll/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/adyen/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/adyen/",
+    "output_file": "docs/plaid/auth/partnerships/adyen/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/alpaca/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/alpaca/",
+    "output_file": "docs/plaid/auth/partnerships/alpaca/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/ansa/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/ansa/",
+    "output_file": "docs/plaid/auth/partnerships/ansa/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/apex-clearing/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/apex-clearing/",
+    "output_file": "docs/plaid/auth/partnerships/apex-clearing/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/astra/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/astra/",
+    "output_file": "docs/plaid/auth/partnerships/astra/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/atomic/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/atomic/",
+    "output_file": "docs/plaid/auth/partnerships/atomic/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/bakkt/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/bakkt/",
+    "output_file": "docs/plaid/auth/partnerships/bakkt/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/bond/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/bond/",
+    "output_file": "docs/plaid/auth/partnerships/bond/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/check/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/check/",
+    "output_file": "docs/plaid/auth/partnerships/check/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/checkbook/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/checkbook/",
+    "output_file": "docs/plaid/auth/partnerships/checkbook/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/checkout/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/checkout/",
+    "output_file": "docs/plaid/auth/partnerships/checkout/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/drivewealth/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/drivewealth/",
+    "output_file": "docs/plaid/auth/partnerships/drivewealth/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/dwolla/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/dwolla/",
+    "output_file": "docs/plaid/auth/partnerships/dwolla/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/finix/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/finix/",
+    "output_file": "docs/plaid/auth/partnerships/finix/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/fortress-trust/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/fortress-trust/",
+    "output_file": "docs/plaid/auth/partnerships/fortress-trust/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/gainbridge/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/gainbridge/",
+    "output_file": "docs/plaid/auth/partnerships/gainbridge/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/galileo/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/galileo/",
+    "output_file": "docs/plaid/auth/partnerships/galileo/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/gusto/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/gusto/",
+    "output_file": "docs/plaid/auth/partnerships/gusto/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/highnote/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/highnote/",
+    "output_file": "docs/plaid/auth/partnerships/highnote/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/lithic/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/lithic/",
+    "output_file": "docs/plaid/auth/partnerships/lithic/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/marqeta/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/marqeta/",
+    "output_file": "docs/plaid/auth/partnerships/marqeta/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/modern-treasury/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/modern-treasury/",
+    "output_file": "docs/plaid/auth/partnerships/modern-treasury/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/moov/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/moov/",
+    "output_file": "docs/plaid/auth/partnerships/moov/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/open-ledger/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/open-ledger/",
+    "output_file": "docs/plaid/auth/partnerships/open-ledger/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/paynote/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/paynote/",
+    "output_file": "docs/plaid/auth/partnerships/paynote/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/riskified/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/riskified/",
+    "output_file": "docs/plaid/auth/partnerships/riskified/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/rize/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/rize/",
+    "output_file": "docs/plaid/auth/partnerships/rize/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/sardine/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/sardine/",
+    "output_file": "docs/plaid/auth/partnerships/sardine/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/scribeup/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/scribeup/",
+    "output_file": "docs/plaid/auth/partnerships/scribeup/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/sila-money/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/sila-money/",
+    "output_file": "docs/plaid/auth/partnerships/sila-money/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/solid/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/solid/",
+    "output_file": "docs/plaid/auth/partnerships/solid/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/square/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/square/",
+    "output_file": "docs/plaid/auth/partnerships/square/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/stake/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/stake/",
+    "output_file": "docs/plaid/auth/partnerships/stake/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/straddle/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/straddle/",
+    "output_file": "docs/plaid/auth/partnerships/straddle/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/stripe/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/stripe/",
+    "output_file": "docs/plaid/auth/partnerships/stripe/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/svb/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/svb/",
+    "output_file": "docs/plaid/auth/partnerships/svb/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/taba-pay/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/taba-pay/",
+    "output_file": "docs/plaid/auth/partnerships/taba-pay/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/treasury-prime/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/treasury-prime/",
+    "output_file": "docs/plaid/auth/partnerships/treasury-prime/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/unit/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/unit/",
+    "output_file": "docs/plaid/auth/partnerships/unit/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/vopay/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/vopay/",
+    "output_file": "docs/plaid/auth/partnerships/vopay/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/wedbush/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/wedbush/",
+    "output_file": "docs/plaid/auth/partnerships/wedbush/index.md"
+  },
+  {
+    "path": "/docs/auth/partnerships/zero-hash/",
+    "source_url": "https://plaid.com/docs/auth/partnerships/zero-hash/",
+    "output_file": "docs/plaid/auth/partnerships/zero-hash/index.md"
+  },
+  {
+    "path": "/docs/auth/pay-by-bank-ux/",
+    "source_url": "https://plaid.com/docs/auth/pay-by-bank-ux/",
+    "output_file": "docs/plaid/auth/pay-by-bank-ux/index.md"
+  },
+  {
+    "path": "/docs/balance/",
+    "source_url": "https://plaid.com/docs/balance/",
+    "output_file": "docs/plaid/balance/index.md"
+  },
+  {
+    "path": "/docs/balance/add-to-app/",
+    "source_url": "https://plaid.com/docs/balance/add-to-app/",
+    "output_file": "docs/plaid/balance/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/balance/migration-guide/",
+    "source_url": "https://plaid.com/docs/balance/migration-guide/",
+    "output_file": "docs/plaid/balance/migration-guide/index.md"
+  },
+  {
+    "path": "/docs/beacon/",
+    "source_url": "https://plaid.com/docs/beacon/",
+    "output_file": "docs/plaid/beacon/index.md"
+  },
+  {
+    "path": "/docs/changelog/",
+    "source_url": "https://plaid.com/docs/changelog/",
+    "output_file": "docs/plaid/changelog/index.md"
+  },
+  {
+    "path": "/docs/check/",
+    "source_url": "https://plaid.com/docs/check/",
+    "output_file": "docs/plaid/check/index.md"
+  },
+  {
+    "path": "/docs/check/add-to-app/",
+    "source_url": "https://plaid.com/docs/check/add-to-app/",
+    "output_file": "docs/plaid/check/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/check/migrate-from-assets/",
+    "source_url": "https://plaid.com/docs/check/migrate-from-assets/",
+    "output_file": "docs/plaid/check/migrate-from-assets/index.md"
+  },
+  {
+    "path": "/docs/check/migrate-from-income/",
+    "source_url": "https://plaid.com/docs/check/migrate-from-income/",
+    "output_file": "docs/plaid/check/migrate-from-income/index.md"
+  },
+  {
+    "path": "/docs/check/migrate-from-transactions/",
+    "source_url": "https://plaid.com/docs/check/migrate-from-transactions/",
+    "output_file": "docs/plaid/check/migrate-from-transactions/index.md"
+  },
+  {
+    "path": "/docs/check/oauth-sharing/",
+    "source_url": "https://plaid.com/docs/check/oauth-sharing/",
+    "output_file": "docs/plaid/check/oauth-sharing/index.md"
+  },
+  {
+    "path": "/docs/check/onboard-users-with-layer/",
+    "source_url": "https://plaid.com/docs/check/onboard-users-with-layer/",
+    "output_file": "docs/plaid/check/onboard-users-with-layer/index.md"
+  },
+  {
+    "path": "/docs/enrich/",
+    "source_url": "https://plaid.com/docs/enrich/",
+    "output_file": "docs/plaid/enrich/index.md"
+  },
+  {
+    "path": "/docs/errors/",
+    "source_url": "https://plaid.com/docs/errors/",
+    "output_file": "docs/plaid/errors/index.md"
+  },
+  {
+    "path": "/docs/errors/api/",
+    "source_url": "https://plaid.com/docs/errors/api/",
+    "output_file": "docs/plaid/errors/api/index.md"
+  },
+  {
+    "path": "/docs/errors/assets/",
+    "source_url": "https://plaid.com/docs/errors/assets/",
+    "output_file": "docs/plaid/errors/assets/index.md"
+  },
+  {
+    "path": "/docs/errors/check-report/",
+    "source_url": "https://plaid.com/docs/errors/check-report/",
+    "output_file": "docs/plaid/errors/check-report/index.md"
+  },
+  {
+    "path": "/docs/errors/income/",
+    "source_url": "https://plaid.com/docs/errors/income/",
+    "output_file": "docs/plaid/errors/income/index.md"
+  },
+  {
+    "path": "/docs/errors/institution/",
+    "source_url": "https://plaid.com/docs/errors/institution/",
+    "output_file": "docs/plaid/errors/institution/index.md"
+  },
+  {
+    "path": "/docs/errors/invalid-input/",
+    "source_url": "https://plaid.com/docs/errors/invalid-input/",
+    "output_file": "docs/plaid/errors/invalid-input/index.md"
+  },
+  {
+    "path": "/docs/errors/invalid-request/",
+    "source_url": "https://plaid.com/docs/errors/invalid-request/",
+    "output_file": "docs/plaid/errors/invalid-request/index.md"
+  },
+  {
+    "path": "/docs/errors/invalid-result/",
+    "source_url": "https://plaid.com/docs/errors/invalid-result/",
+    "output_file": "docs/plaid/errors/invalid-result/index.md"
+  },
+  {
+    "path": "/docs/errors/item/",
+    "source_url": "https://plaid.com/docs/errors/item/",
+    "output_file": "docs/plaid/errors/item/index.md"
+  },
+  {
+    "path": "/docs/errors/microdeposits/",
+    "source_url": "https://plaid.com/docs/errors/microdeposits/",
+    "output_file": "docs/plaid/errors/microdeposits/index.md"
+  },
+  {
+    "path": "/docs/errors/oauth/",
+    "source_url": "https://plaid.com/docs/errors/oauth/",
+    "output_file": "docs/plaid/errors/oauth/index.md"
+  },
+  {
+    "path": "/docs/errors/partner/",
+    "source_url": "https://plaid.com/docs/errors/partner/",
+    "output_file": "docs/plaid/errors/partner/index.md"
+  },
+  {
+    "path": "/docs/errors/payment/",
+    "source_url": "https://plaid.com/docs/errors/payment/",
+    "output_file": "docs/plaid/errors/payment/index.md"
+  },
+  {
+    "path": "/docs/errors/rate-limit-exceeded/",
+    "source_url": "https://plaid.com/docs/errors/rate-limit-exceeded/",
+    "output_file": "docs/plaid/errors/rate-limit-exceeded/index.md"
+  },
+  {
+    "path": "/docs/errors/recaptcha/",
+    "source_url": "https://plaid.com/docs/errors/recaptcha/",
+    "output_file": "docs/plaid/errors/recaptcha/index.md"
+  },
+  {
+    "path": "/docs/errors/sandbox/",
+    "source_url": "https://plaid.com/docs/errors/sandbox/",
+    "output_file": "docs/plaid/errors/sandbox/index.md"
+  },
+  {
+    "path": "/docs/errors/signal/",
+    "source_url": "https://plaid.com/docs/errors/signal/",
+    "output_file": "docs/plaid/errors/signal/index.md"
+  },
+  {
+    "path": "/docs/errors/transactions/",
+    "source_url": "https://plaid.com/docs/errors/transactions/",
+    "output_file": "docs/plaid/errors/transactions/index.md"
+  },
+  {
+    "path": "/docs/errors/transfer/",
+    "source_url": "https://plaid.com/docs/errors/transfer/",
+    "output_file": "docs/plaid/errors/transfer/index.md"
+  },
+  {
+    "path": "/docs/errors/user/",
+    "source_url": "https://plaid.com/docs/errors/user/",
+    "output_file": "docs/plaid/errors/user/index.md"
+  },
+  {
+    "path": "/docs/errors/virtual-account/",
+    "source_url": "https://plaid.com/docs/errors/virtual-account/",
+    "output_file": "docs/plaid/errors/virtual-account/index.md"
+  },
+  {
+    "path": "/docs/financial-insights/",
+    "source_url": "https://plaid.com/docs/financial-insights/",
+    "output_file": "docs/plaid/financial-insights/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/",
+    "source_url": "https://plaid.com/docs/identity-verification/",
+    "output_file": "docs/plaid/identity-verification/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/failed-verifications/",
+    "source_url": "https://plaid.com/docs/identity-verification/failed-verifications/",
+    "output_file": "docs/plaid/identity-verification/failed-verifications/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/hybrid-input-validation/",
+    "source_url": "https://plaid.com/docs/identity-verification/hybrid-input-validation/",
+    "output_file": "docs/plaid/identity-verification/hybrid-input-validation/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/link/",
+    "source_url": "https://plaid.com/docs/identity-verification/link/",
+    "output_file": "docs/plaid/identity-verification/link/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/reporting/",
+    "source_url": "https://plaid.com/docs/identity-verification/reporting/",
+    "output_file": "docs/plaid/identity-verification/reporting/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/risk-checks/",
+    "source_url": "https://plaid.com/docs/identity-verification/risk-checks/",
+    "output_file": "docs/plaid/identity-verification/risk-checks/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/testing/",
+    "source_url": "https://plaid.com/docs/identity-verification/testing/",
+    "output_file": "docs/plaid/identity-verification/testing/index.md"
+  },
+  {
+    "path": "/docs/identity-verification/webhooks/",
+    "source_url": "https://plaid.com/docs/identity-verification/webhooks/",
+    "output_file": "docs/plaid/identity-verification/webhooks/index.md"
+  },
+  {
+    "path": "/docs/identity/",
+    "source_url": "https://plaid.com/docs/identity/",
+    "output_file": "docs/plaid/identity/index.md"
+  },
+  {
+    "path": "/docs/identity/add-to-app/",
+    "source_url": "https://plaid.com/docs/identity/add-to-app/",
+    "output_file": "docs/plaid/identity/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/identity/identity-document-upload/",
+    "source_url": "https://plaid.com/docs/identity/identity-document-upload/",
+    "output_file": "docs/plaid/identity/identity-document-upload/index.md"
+  },
+  {
+    "path": "/docs/identity/partnerships/",
+    "source_url": "https://plaid.com/docs/identity/partnerships/",
+    "output_file": "docs/plaid/identity/partnerships/index.md"
+  },
+  {
+    "path": "/docs/identity/partnerships/alloy/",
+    "source_url": "https://plaid.com/docs/identity/partnerships/alloy/",
+    "output_file": "docs/plaid/identity/partnerships/alloy/index.md"
+  },
+  {
+    "path": "/docs/income/",
+    "source_url": "https://plaid.com/docs/income/",
+    "output_file": "docs/plaid/income/index.md"
+  },
+  {
+    "path": "/docs/income/add-to-app/",
+    "source_url": "https://plaid.com/docs/income/add-to-app/",
+    "output_file": "docs/plaid/income/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/income/bank-income/",
+    "source_url": "https://plaid.com/docs/income/bank-income/",
+    "output_file": "docs/plaid/income/bank-income/index.md"
+  },
+  {
+    "path": "/docs/income/document-income/",
+    "source_url": "https://plaid.com/docs/income/document-income/",
+    "output_file": "docs/plaid/income/document-income/index.md"
+  },
+  {
+    "path": "/docs/income/payroll-income/",
+    "source_url": "https://plaid.com/docs/income/payroll-income/",
+    "output_file": "docs/plaid/income/payroll-income/index.md"
+  },
+  {
+    "path": "/docs/institutions/",
+    "source_url": "https://plaid.com/docs/institutions/",
+    "output_file": "docs/plaid/institutions/index.md"
+  },
+  {
+    "path": "/docs/institutions/europe/",
+    "source_url": "https://plaid.com/docs/institutions/europe/",
+    "output_file": "docs/plaid/institutions/europe/index.md"
+  },
+  {
+    "path": "/docs/investments-move/",
+    "source_url": "https://plaid.com/docs/investments-move/",
+    "output_file": "docs/plaid/investments-move/index.md"
+  },
+  {
+    "path": "/docs/investments-move/add-to-app/",
+    "source_url": "https://plaid.com/docs/investments-move/add-to-app/",
+    "output_file": "docs/plaid/investments-move/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/investments/",
+    "source_url": "https://plaid.com/docs/investments/",
+    "output_file": "docs/plaid/investments/index.md"
+  },
+  {
+    "path": "/docs/investments/add-to-app/",
+    "source_url": "https://plaid.com/docs/investments/add-to-app/",
+    "output_file": "docs/plaid/investments/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/kyc-aml/",
+    "source_url": "https://plaid.com/docs/kyc-aml/",
+    "output_file": "docs/plaid/kyc-aml/index.md"
+  },
+  {
+    "path": "/docs/launch-checklist/",
+    "source_url": "https://plaid.com/docs/launch-checklist/",
+    "output_file": "docs/plaid/launch-checklist/index.md"
+  },
+  {
+    "path": "/docs/layer/",
+    "source_url": "https://plaid.com/docs/layer/",
+    "output_file": "docs/plaid/layer/index.md"
+  },
+  {
+    "path": "/docs/layer/add-to-app/",
+    "source_url": "https://plaid.com/docs/layer/add-to-app/",
+    "output_file": "docs/plaid/layer/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/liabilities/",
+    "source_url": "https://plaid.com/docs/liabilities/",
+    "output_file": "docs/plaid/liabilities/index.md"
+  },
+  {
+    "path": "/docs/liabilities/add-to-app/",
+    "source_url": "https://plaid.com/docs/liabilities/add-to-app/",
+    "output_file": "docs/plaid/liabilities/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/link/",
+    "source_url": "https://plaid.com/docs/link/",
+    "output_file": "docs/plaid/link/index.md"
+  },
+  {
+    "path": "/docs/link/android/",
+    "source_url": "https://plaid.com/docs/link/android/",
+    "output_file": "docs/plaid/link/android/index.md"
+  },
+  {
+    "path": "/docs/link/android/troubleshooting/",
+    "source_url": "https://plaid.com/docs/link/android/troubleshooting/",
+    "output_file": "docs/plaid/link/android/troubleshooting/index.md"
+  },
+  {
+    "path": "/docs/link/best-practices/",
+    "source_url": "https://plaid.com/docs/link/best-practices/",
+    "output_file": "docs/plaid/link/best-practices/index.md"
+  },
+  {
+    "path": "/docs/link/customization/",
+    "source_url": "https://plaid.com/docs/link/customization/",
+    "output_file": "docs/plaid/link/customization/index.md"
+  },
+  {
+    "path": "/docs/link/data-transparency-messaging-migration-guide/",
+    "source_url": "https://plaid.com/docs/link/data-transparency-messaging-migration-guide/",
+    "output_file": "docs/plaid/link/data-transparency-messaging-migration-guide/index.md"
+  },
+  {
+    "path": "/docs/link/duplicate-items/",
+    "source_url": "https://plaid.com/docs/link/duplicate-items/",
+    "output_file": "docs/plaid/link/duplicate-items/index.md"
+  },
+  {
+    "path": "/docs/link/embedded-institution-search/",
+    "source_url": "https://plaid.com/docs/link/embedded-institution-search/",
+    "output_file": "docs/plaid/link/embedded-institution-search/index.md"
+  },
+  {
+    "path": "/docs/link/handle-invalid-link-token/",
+    "source_url": "https://plaid.com/docs/link/handle-invalid-link-token/",
+    "output_file": "docs/plaid/link/handle-invalid-link-token/index.md"
+  },
+  {
+    "path": "/docs/link/hosted-link/",
+    "source_url": "https://plaid.com/docs/link/hosted-link/",
+    "output_file": "docs/plaid/link/hosted-link/index.md"
+  },
+  {
+    "path": "/docs/link/hosted-link/embedded-clients/",
+    "source_url": "https://plaid.com/docs/link/hosted-link/embedded-clients/",
+    "output_file": "docs/plaid/link/hosted-link/embedded-clients/index.md"
+  },
+  {
+    "path": "/docs/link/initializing-products/",
+    "source_url": "https://plaid.com/docs/link/initializing-products/",
+    "output_file": "docs/plaid/link/initializing-products/index.md"
+  },
+  {
+    "path": "/docs/link/institution-status/",
+    "source_url": "https://plaid.com/docs/link/institution-status/",
+    "output_file": "docs/plaid/link/institution-status/index.md"
+  },
+  {
+    "path": "/docs/link/ios/",
+    "source_url": "https://plaid.com/docs/link/ios/",
+    "output_file": "docs/plaid/link/ios/index.md"
+  },
+  {
+    "path": "/docs/link/link-recovery/",
+    "source_url": "https://plaid.com/docs/link/link-recovery/",
+    "output_file": "docs/plaid/link/link-recovery/index.md"
+  },
+  {
+    "path": "/docs/link/link-token-migration-guide/",
+    "source_url": "https://plaid.com/docs/link/link-token-migration-guide/",
+    "output_file": "docs/plaid/link/link-token-migration-guide/index.md"
+  },
+  {
+    "path": "/docs/link/measuring-conversion/",
+    "source_url": "https://plaid.com/docs/link/measuring-conversion/",
+    "output_file": "docs/plaid/link/measuring-conversion/index.md"
+  },
+  {
+    "path": "/docs/link/messaging/",
+    "source_url": "https://plaid.com/docs/link/messaging/",
+    "output_file": "docs/plaid/link/messaging/index.md"
+  },
+  {
+    "path": "/docs/link/multi-item-link/",
+    "source_url": "https://plaid.com/docs/link/multi-item-link/",
+    "output_file": "docs/plaid/link/multi-item-link/index.md"
+  },
+  {
+    "path": "/docs/link/oauth/",
+    "source_url": "https://plaid.com/docs/link/oauth/",
+    "output_file": "docs/plaid/link/oauth/index.md"
+  },
+  {
+    "path": "/docs/link/react-native/",
+    "source_url": "https://plaid.com/docs/link/react-native/",
+    "output_file": "docs/plaid/link/react-native/index.md"
+  },
+  {
+    "path": "/docs/link/returning-user/",
+    "source_url": "https://plaid.com/docs/link/returning-user/",
+    "output_file": "docs/plaid/link/returning-user/index.md"
+  },
+  {
+    "path": "/docs/link/troubleshooting/",
+    "source_url": "https://plaid.com/docs/link/troubleshooting/",
+    "output_file": "docs/plaid/link/troubleshooting/index.md"
+  },
+  {
+    "path": "/docs/link/update-mode/",
+    "source_url": "https://plaid.com/docs/link/update-mode/",
+    "output_file": "docs/plaid/link/update-mode/index.md"
+  },
+  {
+    "path": "/docs/link/web/",
+    "source_url": "https://plaid.com/docs/link/web/",
+    "output_file": "docs/plaid/link/web/index.md"
+  },
+  {
+    "path": "/docs/link/webview/",
+    "source_url": "https://plaid.com/docs/link/webview/",
+    "output_file": "docs/plaid/link/webview/index.md"
+  },
+  {
+    "path": "/docs/monitor/",
+    "source_url": "https://plaid.com/docs/monitor/",
+    "output_file": "docs/plaid/monitor/index.md"
+  },
+  {
+    "path": "/docs/monitor/algorithms-and-lists/",
+    "source_url": "https://plaid.com/docs/monitor/algorithms-and-lists/",
+    "output_file": "docs/plaid/monitor/algorithms-and-lists/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/",
+    "source_url": "https://plaid.com/docs/payment-initiation/",
+    "output_file": "docs/plaid/payment-initiation/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payment-initiation-one-time/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payment-initiation-one-time/",
+    "output_file": "docs/plaid/payment-initiation/payment-initiation-one-time/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payment-initiation-one-time/add-to-app/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payment-initiation-one-time/add-to-app/",
+    "output_file": "docs/plaid/payment-initiation/payment-initiation-one-time/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payment-initiation-one-time/handling-failed-payments/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payment-initiation-one-time/handling-failed-payments/",
+    "output_file": "docs/plaid/payment-initiation/payment-initiation-one-time/handling-failed-payments/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payment-initiation-one-time/refunds/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payment-initiation-one-time/refunds/",
+    "output_file": "docs/plaid/payment-initiation/payment-initiation-one-time/refunds/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payment-initiation-one-time/user-onboarding-and-account-funding/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payment-initiation-one-time/user-onboarding-and-account-funding/",
+    "output_file": "docs/plaid/payment-initiation/payment-initiation-one-time/user-onboarding-and-account-funding/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payment-status/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payment-status/",
+    "output_file": "docs/plaid/payment-initiation/payment-status/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/payments-dashboard/",
+    "source_url": "https://plaid.com/docs/payment-initiation/payments-dashboard/",
+    "output_file": "docs/plaid/payment-initiation/payments-dashboard/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/variable-recurring-payments/",
+    "source_url": "https://plaid.com/docs/payment-initiation/variable-recurring-payments/",
+    "output_file": "docs/plaid/payment-initiation/variable-recurring-payments/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/variable-recurring-payments/add-to-app/",
+    "source_url": "https://plaid.com/docs/payment-initiation/variable-recurring-payments/add-to-app/",
+    "output_file": "docs/plaid/payment-initiation/variable-recurring-payments/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/variable-recurring-payments/handling-failed-payments/",
+    "source_url": "https://plaid.com/docs/payment-initiation/variable-recurring-payments/handling-failed-payments/",
+    "output_file": "docs/plaid/payment-initiation/variable-recurring-payments/handling-failed-payments/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/variable-recurring-payments/managing-consent/",
+    "source_url": "https://plaid.com/docs/payment-initiation/variable-recurring-payments/managing-consent/",
+    "output_file": "docs/plaid/payment-initiation/variable-recurring-payments/managing-consent/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/variable-recurring-payments/refunds/",
+    "source_url": "https://plaid.com/docs/payment-initiation/variable-recurring-payments/refunds/",
+    "output_file": "docs/plaid/payment-initiation/variable-recurring-payments/refunds/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/account-sweeping/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/account-sweeping/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/account-sweeping/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/add-to-app/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/add-to-app/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/handling-unexpected-payments/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/handling-unexpected-payments/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/handling-unexpected-payments/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/managing-virtual-accounts/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/managing-virtual-accounts/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/managing-virtual-accounts/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/payment-confirmation/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/payment-confirmation/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/payment-confirmation/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/payouts/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/payouts/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/payouts/index.md"
+  },
+  {
+    "path": "/docs/payment-initiation/virtual-accounts/refunds/",
+    "source_url": "https://plaid.com/docs/payment-initiation/virtual-accounts/refunds/",
+    "output_file": "docs/plaid/payment-initiation/virtual-accounts/refunds/index.md"
+  },
+  {
+    "path": "/docs/payments/",
+    "source_url": "https://plaid.com/docs/payments/",
+    "output_file": "docs/plaid/payments/index.md"
+  },
+  {
+    "path": "/docs/protect/",
+    "source_url": "https://plaid.com/docs/protect/",
+    "output_file": "docs/plaid/protect/index.md"
+  },
+  {
+    "path": "/docs/quickstart/",
+    "source_url": "https://plaid.com/docs/quickstart/",
+    "output_file": "docs/plaid/quickstart/index.md"
+  },
+  {
+    "path": "/docs/quickstart/glossary/",
+    "source_url": "https://plaid.com/docs/quickstart/glossary/",
+    "output_file": "docs/plaid/quickstart/glossary/index.md"
+  },
+  {
+    "path": "/docs/resources/",
+    "source_url": "https://plaid.com/docs/resources/",
+    "output_file": "docs/plaid/resources/index.md"
+  },
+  {
+    "path": "/docs/resources/mcp/",
+    "source_url": "https://plaid.com/docs/resources/mcp/",
+    "output_file": "docs/plaid/resources/mcp/index.md"
+  },
+  {
+    "path": "/docs/resources/vibe-coding/",
+    "source_url": "https://plaid.com/docs/resources/vibe-coding/",
+    "output_file": "docs/plaid/resources/vibe-coding/index.md"
+  },
+  {
+    "path": "/docs/sandbox/",
+    "source_url": "https://plaid.com/docs/sandbox/",
+    "output_file": "docs/plaid/sandbox/index.md"
+  },
+  {
+    "path": "/docs/sandbox/institutions/",
+    "source_url": "https://plaid.com/docs/sandbox/institutions/",
+    "output_file": "docs/plaid/sandbox/institutions/index.md"
+  },
+  {
+    "path": "/docs/sandbox/test-credentials/",
+    "source_url": "https://plaid.com/docs/sandbox/test-credentials/",
+    "output_file": "docs/plaid/sandbox/test-credentials/index.md"
+  },
+  {
+    "path": "/docs/sandbox/user-custom/",
+    "source_url": "https://plaid.com/docs/sandbox/user-custom/",
+    "output_file": "docs/plaid/sandbox/user-custom/index.md"
+  },
+  {
+    "path": "/docs/settings/",
+    "source_url": "https://plaid.com/docs/settings/",
+    "output_file": "docs/plaid/settings/index.md"
+  },
+  {
+    "path": "/docs/signal/",
+    "source_url": "https://plaid.com/docs/signal/",
+    "output_file": "docs/plaid/signal/index.md"
+  },
+  {
+    "path": "/docs/signal/add-to-app/",
+    "source_url": "https://plaid.com/docs/signal/add-to-app/",
+    "output_file": "docs/plaid/signal/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/signal/creating-signal-items/",
+    "source_url": "https://plaid.com/docs/signal/creating-signal-items/",
+    "output_file": "docs/plaid/signal/creating-signal-items/index.md"
+  },
+  {
+    "path": "/docs/signal/reporting-returns/",
+    "source_url": "https://plaid.com/docs/signal/reporting-returns/",
+    "output_file": "docs/plaid/signal/reporting-returns/index.md"
+  },
+  {
+    "path": "/docs/signal/signal-rules/",
+    "source_url": "https://plaid.com/docs/signal/signal-rules/",
+    "output_file": "docs/plaid/signal/signal-rules/index.md"
+  },
+  {
+    "path": "/docs/signal/tuning-rules/",
+    "source_url": "https://plaid.com/docs/signal/tuning-rules/",
+    "output_file": "docs/plaid/signal/tuning-rules/index.md"
+  },
+  {
+    "path": "/docs/statements/",
+    "source_url": "https://plaid.com/docs/statements/",
+    "output_file": "docs/plaid/statements/index.md"
+  },
+  {
+    "path": "/docs/support/",
+    "source_url": "https://plaid.com/docs/support/",
+    "output_file": "docs/plaid/support/index.md"
+  },
+  {
+    "path": "/docs/transactions/",
+    "source_url": "https://plaid.com/docs/transactions/",
+    "output_file": "docs/plaid/transactions/index.md"
+  },
+  {
+    "path": "/docs/transactions/add-to-app/",
+    "source_url": "https://plaid.com/docs/transactions/add-to-app/",
+    "output_file": "docs/plaid/transactions/add-to-app/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/",
+    "output_file": "docs/plaid/transactions/partnerships/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/boom/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/boom/",
+    "output_file": "docs/plaid/transactions/partnerships/boom/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/cardlytics/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/cardlytics/",
+    "output_file": "docs/plaid/transactions/partnerships/cardlytics/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/esusu/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/esusu/",
+    "output_file": "docs/plaid/transactions/partnerships/esusu/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/knot/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/knot/",
+    "output_file": "docs/plaid/transactions/partnerships/knot/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/layer/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/layer/",
+    "output_file": "docs/plaid/transactions/partnerships/layer/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/pinwheel/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/pinwheel/",
+    "output_file": "docs/plaid/transactions/partnerships/pinwheel/index.md"
+  },
+  {
+    "path": "/docs/transactions/partnerships/teal/",
+    "source_url": "https://plaid.com/docs/transactions/partnerships/teal/",
+    "output_file": "docs/plaid/transactions/partnerships/teal/index.md"
+  },
+  {
+    "path": "/docs/transactions/pfc-migration/",
+    "source_url": "https://plaid.com/docs/transactions/pfc-migration/",
+    "output_file": "docs/plaid/transactions/pfc-migration/index.md"
+  },
+  {
+    "path": "/docs/transactions/sync-migration/",
+    "source_url": "https://plaid.com/docs/transactions/sync-migration/",
+    "output_file": "docs/plaid/transactions/sync-migration/index.md"
+  },
+  {
+    "path": "/docs/transactions/transactions-data/",
+    "source_url": "https://plaid.com/docs/transactions/transactions-data/",
+    "output_file": "docs/plaid/transactions/transactions-data/index.md"
+  },
+  {
+    "path": "/docs/transactions/troubleshooting/",
+    "source_url": "https://plaid.com/docs/transactions/troubleshooting/",
+    "output_file": "docs/plaid/transactions/troubleshooting/index.md"
+  },
+  {
+    "path": "/docs/transactions/webhooks/",
+    "source_url": "https://plaid.com/docs/transactions/webhooks/",
+    "output_file": "docs/plaid/transactions/webhooks/index.md"
+  },
+  {
+    "path": "/docs/transfer/",
+    "source_url": "https://plaid.com/docs/transfer/",
+    "output_file": "docs/plaid/transfer/index.md"
+  },
+  {
+    "path": "/docs/transfer/application/",
+    "source_url": "https://plaid.com/docs/transfer/application/",
+    "output_file": "docs/plaid/transfer/application/index.md"
+  },
+  {
+    "path": "/docs/transfer/creating-transfers/",
+    "source_url": "https://plaid.com/docs/transfer/creating-transfers/",
+    "output_file": "docs/plaid/transfer/creating-transfers/index.md"
+  },
+  {
+    "path": "/docs/transfer/dashboard/",
+    "source_url": "https://plaid.com/docs/transfer/dashboard/",
+    "output_file": "docs/plaid/transfer/dashboard/index.md"
+  },
+  {
+    "path": "/docs/transfer/flow-of-funds/",
+    "source_url": "https://plaid.com/docs/transfer/flow-of-funds/",
+    "output_file": "docs/plaid/transfer/flow-of-funds/index.md"
+  },
+  {
+    "path": "/docs/transfer/glossary/",
+    "source_url": "https://plaid.com/docs/transfer/glossary/",
+    "output_file": "docs/plaid/transfer/glossary/index.md"
+  },
+  {
+    "path": "/docs/transfer/platform-payments/",
+    "source_url": "https://plaid.com/docs/transfer/platform-payments/",
+    "output_file": "docs/plaid/transfer/platform-payments/index.md"
+  },
+  {
+    "path": "/docs/transfer/reconciling-transfers/",
+    "source_url": "https://plaid.com/docs/transfer/reconciling-transfers/",
+    "output_file": "docs/plaid/transfer/reconciling-transfers/index.md"
+  },
+  {
+    "path": "/docs/transfer/recurring-transfers/",
+    "source_url": "https://plaid.com/docs/transfer/recurring-transfers/",
+    "output_file": "docs/plaid/transfer/recurring-transfers/index.md"
+  },
+  {
+    "path": "/docs/transfer/refunds/",
+    "source_url": "https://plaid.com/docs/transfer/refunds/",
+    "output_file": "docs/plaid/transfer/refunds/index.md"
+  },
+  {
+    "path": "/docs/transfer/reserves/",
+    "source_url": "https://plaid.com/docs/transfer/reserves/",
+    "output_file": "docs/plaid/transfer/reserves/index.md"
+  },
+  {
+    "path": "/docs/transfer/sandbox/",
+    "source_url": "https://plaid.com/docs/transfer/sandbox/",
+    "output_file": "docs/plaid/transfer/sandbox/index.md"
+  },
+  {
+    "path": "/docs/transfer/signal-rules/",
+    "source_url": "https://plaid.com/docs/transfer/signal-rules/",
+    "output_file": "docs/plaid/transfer/signal-rules/index.md"
+  },
+  {
+    "path": "/docs/transfer/troubleshooting/",
+    "source_url": "https://plaid.com/docs/transfer/troubleshooting/",
+    "output_file": "docs/plaid/transfer/troubleshooting/index.md"
+  },
+  {
+    "path": "/docs/transfer/using-transfer-ui/",
+    "source_url": "https://plaid.com/docs/transfer/using-transfer-ui/",
+    "output_file": "docs/plaid/transfer/using-transfer-ui/index.md"
+  },
+  {
+    "path": "/docs/underwriting/",
+    "source_url": "https://plaid.com/docs/underwriting/",
+    "output_file": "docs/plaid/underwriting/index.md"
+  }
+]
