@@ -62,6 +62,36 @@ plaid signal evaluate \
   --amount 102.05
 ```
 
+Create a Plaid Check report for a user:
+
+```bash
+plaid check report create \
+  --user-id YOUR_USER_ID \
+  --webhook https://example.com/webhooks/plaid-check \
+  --consumer-report-permissible-purpose LEGITIMATE_BUSINESS_NEED_OTHER
+```
+
+Download the latest bank income PDF to disk:
+
+```bash
+plaid income bank-income-pdf-get \
+  --user-token YOUR_USER_TOKEN \
+  --out reports/bank-income.pdf
+```
+
+Create a wallet transfer using typed flags plus JSON for less common fields:
+
+```bash
+plaid wallet transaction execute \
+  --wallet-id YOUR_WALLET_ID \
+  --idempotency-key txn_123 \
+  --counterparty-name "Jane Doe" \
+  --amount-currency GBP \
+  --amount-value 10.50 \
+  --reference "PAYOUT-123" \
+  --body @wallet-transaction.json
+```
+
 ## Local Docs Snapshot
 
 Plaid's docs are mirrored under [docs/plaid/](docs/plaid/) for implementation reference.
