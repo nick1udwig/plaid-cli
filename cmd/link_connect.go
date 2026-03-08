@@ -31,7 +31,7 @@ func newLinkConnectCmd(opts *Options) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "connect",
 		Short: "Open Hosted Link in the browser and save the resulting Item",
-		Long:  "Create a Hosted Link session, open it in the browser, poll for completion, exchange the public token, and save the Item locally.",
+		Long:  "Capability: write. Creates a Hosted Link session, opens it in the browser, polls for completion, exchanges the public token, and saves the Item locally.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if printDocPath {
 				return writeJSON(cmd, map[string]any{

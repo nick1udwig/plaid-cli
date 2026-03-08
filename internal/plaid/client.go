@@ -199,6 +199,14 @@ func (c *Client) GetInstitutionName(ctx context.Context, institutionID string, c
 	return out.Institution.Name, nil
 }
 
+func (c *Client) Call(ctx context.Context, path string, requestBody any) (map[string]any, error) {
+	var out map[string]any
+	if err := c.postJSON(ctx, path, requestBody, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *Client) postJSON(ctx context.Context, path string, requestBody, responseBody any) error {
 	payload, err := json.Marshal(requestBody)
 	if err != nil {

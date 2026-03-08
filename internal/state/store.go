@@ -192,6 +192,16 @@ func (s *Store) LoadItem(itemID string) (ItemRecord, error) {
 	return record, err
 }
 
+func (s *Store) DeleteItem(itemID string) error {
+	if err := os.Remove(s.ItemPath(itemID)); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("delete item %s: %w", itemID, err)
+	}
+	return nil
+}
+
 func (s *Store) ListItems() ([]ItemRecord, error) {
 	entries, err := os.ReadDir(filepath.Join(s.dir, "items"))
 	if err != nil {
@@ -216,6 +226,20 @@ func (s *Store) ListItems() ([]ItemRecord, error) {
 		return strings.Compare(a.ItemID, b.ItemID)
 	})
 	return records, nil
+}
+
+func (s *Store) FindItemByAccessToken(accessToken string) (*ItemRecord, error) {
+	items, err := s.ListItems()
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range items {
+		if item.AccessToken == accessToken {
+			itemCopy := item
+			return &itemCopy, nil
+		}
+	}
+	return nil, os.ErrNotExist
 }
 
 func (s *Store) ConfigPath() string {
