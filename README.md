@@ -68,7 +68,7 @@ Create a Plaid Check report for a user:
 plaid check report create \
   --user-id YOUR_USER_ID \
   --webhook https://example.com/webhooks/plaid-check \
-  --consumer-report-permissible-purpose LEGITIMATE_BUSINESS_NEED_OTHER
+  --days-requested 365
 ```
 
 Download the latest bank income PDF to disk:
