@@ -29,6 +29,11 @@ func newSandboxCmd() *cobra.Command {
 func newSandboxPublicTokenCreateCmd() *cobra.Command {
 	var institutionID string
 	var products []string
+	var webhook string
+	var overrideUsername string
+	var overridePassword string
+	var userID string
+	var userToken string
 	var info *commandInfoFlags
 	var bodyFlags *requestBodyFlags
 
@@ -69,6 +74,21 @@ func newSandboxPublicTokenCreateCmd() *cobra.Command {
 			if err := applyStringSliceFlag(cmd, body, "product", products, "initial_products"); err != nil {
 				return err
 			}
+			if err := applyStringFlag(cmd, body, "webhook", webhook, "options", "webhook"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "override-username", overrideUsername, "options", "override_username"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "override-password", overridePassword, "options", "override_password"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "user-id", userID, "user_id"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "user-token", userToken, "user_token"); err != nil {
+				return err
+			}
 			if err := requireBodyFields(body, map[string][]string{
 				"--institution-id": {"institution_id"},
 				"--product":        {"initial_products"},
@@ -90,6 +110,11 @@ func newSandboxPublicTokenCreateCmd() *cobra.Command {
 	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&institutionID, "institution-id", "", "Sandbox institution_id")
 	cmd.Flags().StringSliceVar(&products, "product", nil, "Initial product to enable on the Sandbox Item (repeatable)")
+	cmd.Flags().StringVar(&webhook, "webhook", "", "Optional webhook URL to attach to the Sandbox Item")
+	cmd.Flags().StringVar(&overrideUsername, "override-username", "", "Override the Sandbox username used when creating the Item")
+	cmd.Flags().StringVar(&overridePassword, "override-password", "", "Override the Sandbox password used when creating the Item")
+	cmd.Flags().StringVar(&userID, "user-id", "", "Plaid user_id to associate with the Sandbox Item")
+	cmd.Flags().StringVar(&userToken, "user-token", "", "Legacy Plaid user_token to associate with the Sandbox Item")
 	return cmd
 }
 

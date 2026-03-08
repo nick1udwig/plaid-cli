@@ -16,14 +16,21 @@ import (
 )
 
 const (
-	liveTestGateEnv           = "PLAID_RUN_LIVE_TESTS"
-	liveSandboxClientIDEnv    = "PLAID_SANDBOX_CLIENT_ID"
-	liveSandboxSecretEnv      = "PLAID_SANDBOX_SECRET"
-	liveFallbackClientIDEnv   = "PLAID_CLIENT_ID"
-	liveFallbackSecretEnv     = "PLAID_SECRET"
-	liveSandboxInstitutionEnv = "PLAID_SANDBOX_INSTITUTION_ID"
-	liveMicrodepositTokenEnv  = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN"
-	liveMicrodepositAcctEnv   = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID"
+	liveTestGateEnv                  = "PLAID_RUN_LIVE_TESTS"
+	liveProcessorTestGateEnv         = "PLAID_RUN_LIVE_PROCESSOR_TESTS"
+	livePaymentInitiationTestGateEnv = "PLAID_RUN_LIVE_PAYMENT_INITIATION_TESTS"
+	liveIncomeTestGateEnv            = "PLAID_RUN_LIVE_INCOME_TESTS"
+	liveCheckTestGateEnv             = "PLAID_RUN_LIVE_CHECK_TESTS"
+	liveSandboxClientIDEnv           = "PLAID_SANDBOX_CLIENT_ID"
+	liveSandboxSecretEnv             = "PLAID_SANDBOX_SECRET"
+	liveFallbackClientIDEnv          = "PLAID_CLIENT_ID"
+	liveFallbackSecretEnv            = "PLAID_SECRET"
+	liveSandboxInstitutionEnv        = "PLAID_SANDBOX_INSTITUTION_ID"
+	liveMicrodepositTokenEnv         = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN"
+	liveMicrodepositAcctEnv          = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID"
+	liveIncomeItemIDEnv              = "PLAID_LIVE_INCOME_ITEM_ID"
+	liveCheckUserIDEnv               = "PLAID_LIVE_CHECK_USER_ID"
+	liveCheckItemIDEnv               = "PLAID_LIVE_CHECK_ITEM_ID"
 )
 
 type liveSandboxConfig struct {
@@ -38,10 +45,16 @@ type liveSandboxItem struct {
 	AccessToken string
 }
 
+type liveSandboxUser struct {
+	UserID string
+}
+
 type liveSandboxHarness struct {
-	t            *testing.T
-	stateDir     string
-	cleanupItems []liveSandboxItem
+	t                    *testing.T
+	stateDir             string
+	cleanupItems         []liveSandboxItem
+	cleanupUsers         []liveSandboxUser
+	cleanupSubscriptions []string
 }
 
 type commandRunError struct {
@@ -73,10 +86,7 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 		harness.cleanup(t, cleanupClient)
 	})
 
-	initResp := harness.mustRunJSON("init", "--env", "sandbox", "--client-id", cfg.ClientID, "--secret", cfg.Secret, "--client-name", cfg.ClientName)
-	if got := requireStringField(t, initResp, "app_profile", "env"); got != "sandbox" {
-		t.Fatalf("init app_profile.env = %q, want sandbox", got)
-	}
+	harness.initializeAppProfile(cfg)
 
 	institutionResp := harness.mustRunJSON("institution", "get-by-id", "--institution-id", cfg.InstitutionID)
 	if requireStringField(t, institutionResp, "institution", "name") == "" {
@@ -100,6 +110,31 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 	if requireStringField(t, linkGetResp, "request_id") == "" {
 		t.Fatal("link token-get response did not include request_id")
 	}
+
+	userID := harness.createUser("plaid-cli-live-user-reset", false)
+	userGetResp := harness.mustRunJSON("user", "get", "--user-id", userID)
+	if got := requireStringField(t, userGetResp, "user_id"); got != userID {
+		t.Fatalf("user.get user_id = %q, want %q", got, userID)
+	}
+	userItem := harness.createSandboxItem(cfg, []string{"auth"}, "--user-id", userID)
+	userResetResp := harness.mustRunJSON(
+		"sandbox",
+		"user-reset-login",
+		"--user-id", userID,
+		"--item-id", userItem.ItemID,
+	)
+	if requireStringField(t, userResetResp, "request_id") == "" {
+		t.Fatal("sandbox user-reset-login did not include request_id")
+	}
+	userRemoveResp := harness.mustRunJSON("item", "remove", "--item", userItem.ItemID)
+	localUserItemDeleted, ok := bodyValue(userRemoveResp, "local_item_deleted")
+	if !ok {
+		t.Fatal("user-linked item.remove did not include local_item_deleted")
+	}
+	if deleted, ok := localUserItemDeleted.(bool); !ok || !deleted {
+		t.Fatalf("user-linked item.remove local_item_deleted = %#v, want true", localUserItemDeleted)
+	}
+	harness.untrackItem(userItem.ItemID)
 
 	publicTokenResp := harness.mustRunJSON(
 		"sandbox",
@@ -275,6 +310,199 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 	}
 }
 
+func TestLiveSandboxDynamicTransactionsSuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	harness := newLiveSandboxHarness(t)
+	cleanupClient := newLiveSandboxClient(t, cfg)
+	t.Cleanup(func() {
+		harness.cleanup(t, cleanupClient)
+	})
+
+	harness.initializeAppProfile(cfg)
+	item := harness.createSandboxItem(
+		cfg,
+		[]string{"transactions"},
+		"--override-username", "user_transactions_dynamic",
+		"--override-password", "plaid-cli-live-test",
+	)
+
+	beforeSyncResp := harness.mustRunJSONRetryProductReady(
+		10,
+		3*time.Second,
+		"transactions",
+		"sync",
+		"--item", item.ItemID,
+		"--count", "100",
+	)
+	cursor := requireStringField(t, beforeSyncResp, "next_cursor")
+
+	today := time.Now().UTC().Format("2006-01-02")
+	createResp := harness.mustRunJSON(
+		"sandbox",
+		"transactions-create",
+		"--item", item.ItemID,
+		"--date-transacted", today,
+		"--date-posted", today,
+		"--amount", "12.34",
+		"--description", "plaid-cli live test transaction",
+		"--currency", "USD",
+	)
+	if requireStringField(t, createResp, "request_id") == "" {
+		t.Fatal("sandbox transactions-create did not include request_id")
+	}
+
+	foundAddedTransaction := false
+	for attempt := 1; attempt <= 10; attempt++ {
+		afterSyncResp := harness.mustRunJSONRetryProductReady(
+			10,
+			3*time.Second,
+			"transactions",
+			"sync",
+			"--item", item.ItemID,
+			"--cursor", cursor,
+			"--count", "100",
+		)
+		if len(requireArrayField(t, afterSyncResp, "added")) > 0 {
+			foundAddedTransaction = true
+			break
+		}
+		if attempt < 10 {
+			t.Logf("transactions.sync after sandbox transactions-create returned no added transactions yet (attempt %d/10); retrying", attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !foundAddedTransaction {
+		t.Fatal("transactions.sync after sandbox transactions-create returned no added transactions")
+	}
+}
+
+func TestLiveSandboxProcessorTokenCreate(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	requireOptionalLiveSuite(t, liveProcessorTestGateEnv, "live sandbox processor token tests")
+
+	harness := newLiveSandboxHarness(t)
+	harness.initializeAppProfile(cfg)
+
+	resp := harness.mustRunJSON(
+		"sandbox",
+		"processor-token-create",
+		"--institution-id", cfg.InstitutionID,
+	)
+	if requireStringField(t, resp, "processor_token") == "" {
+		t.Fatal("sandbox processor-token-create did not include processor_token")
+	}
+}
+
+func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	requireOptionalLiveSuite(t, livePaymentInitiationTestGateEnv, "live Payment Initiation sandbox tests")
+
+	harness := newLiveSandboxHarness(t)
+	harness.initializeAppProfile(cfg)
+
+	recipientResp := harness.mustRunJSON(
+		"payment-initiation",
+		"recipient",
+		"create",
+		"--name", "Plaid CLI Live Test Recipient",
+		"--iban", "GB29NWBK60161331926819",
+	)
+	recipientID := requireStringField(t, recipientResp, "recipient_id")
+
+	paymentResp := harness.mustRunJSON(
+		"payment-initiation",
+		"payment",
+		"create",
+		"--recipient-id", recipientID,
+		"--reference", "PlaidCliLiveTest",
+		"--amount-currency", "GBP",
+		"--amount-value", "10.50",
+	)
+	paymentID := requireStringField(t, paymentResp, "payment_id")
+
+	simulateResp := harness.mustRunJSON(
+		"sandbox",
+		"payment-simulate",
+		"--payment-id", paymentID,
+		"--webhook", "https://example.com/plaid-cli-live-payment",
+		"--status", "PAYMENT_STATUS_INITIATED",
+	)
+	if requireStringField(t, simulateResp, "request_id") == "" {
+		t.Fatal("sandbox payment-simulate did not include request_id")
+	}
+}
+
+func TestLiveSandboxIncomeSuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	requireOptionalLiveSuite(t, liveIncomeTestGateEnv, "live Income sandbox tests")
+
+	harness := newLiveSandboxHarness(t)
+	harness.initializeAppProfile(cfg)
+	incomeItemID := strings.TrimSpace(os.Getenv(liveIncomeItemIDEnv))
+	if incomeItemID == "" {
+		t.Skipf(
+			"set %s to run the Income webhook suite against a pre-created income verification item; see docs/live-test-setup.md",
+			liveIncomeItemIDEnv,
+		)
+	}
+
+	fireResp := harness.mustRunJSON(
+		"sandbox",
+		"income-fire-webhook",
+		"--item-id", incomeItemID,
+		"--webhook", "https://example.com/plaid-cli-live-income",
+		"--webhook-code", "INCOME_VERIFICATION",
+		"--verification-status", "VERIFICATION_STATUS_PROCESSING_COMPLETE",
+	)
+	if requireStringField(t, fireResp, "request_id") == "" {
+		t.Fatal("sandbox income-fire-webhook did not include request_id")
+	}
+}
+
+func TestLiveSandboxCheckMonitoringSuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	requireOptionalLiveSuite(t, liveCheckTestGateEnv, "live Plaid Check sandbox tests")
+
+	harness := newLiveSandboxHarness(t)
+	cleanupClient := newLiveSandboxClient(t, cfg)
+	t.Cleanup(func() {
+		harness.cleanup(t, cleanupClient)
+	})
+
+	harness.initializeAppProfile(cfg)
+	userID := strings.TrimSpace(os.Getenv(liveCheckUserIDEnv))
+	itemID := strings.TrimSpace(os.Getenv(liveCheckItemIDEnv))
+	if userID == "" || itemID == "" {
+		t.Skipf(
+			"set %s and %s to run the Plaid Check monitoring suite against a pre-created CRA user and item; see docs/live-test-setup.md",
+			liveCheckUserIDEnv,
+			liveCheckItemIDEnv,
+		)
+	}
+
+	subscribeResp := harness.mustRunJSON(
+		"check",
+		"monitoring",
+		"subscribe",
+		"--user-id", userID,
+		"--item-id", itemID,
+		"--webhook", "https://example.com/plaid-cli-live-check",
+	)
+	subscriptionID := requireStringField(t, subscribeResp, "subscription_id")
+	harness.trackSubscription(subscriptionID)
+
+	updateResp := harness.mustRunJSON(
+		"sandbox",
+		"cra",
+		"cashflow-updates-update",
+		"--user-id", userID,
+		"--webhook-code", "LOW_BALANCE_DETECTED",
+	)
+	if requireStringField(t, updateResp, "request_id") == "" {
+		t.Fatal("sandbox cra cashflow-updates-update did not include request_id")
+	}
+}
+
 func loadLiveSandboxConfig(t *testing.T) liveSandboxConfig {
 	t.Helper()
 
@@ -328,11 +556,54 @@ func newLiveSandboxHarness(t *testing.T) *liveSandboxHarness {
 	}
 }
 
+func requireOptionalLiveSuite(t *testing.T, gateEnv, description string) {
+	t.Helper()
+
+	if !envTruthy(os.Getenv(gateEnv)) {
+		t.Skipf("set %s=1 to run %s", gateEnv, description)
+	}
+}
+
+func marshalBodyArg(t *testing.T, body map[string]any) string {
+	t.Helper()
+
+	raw, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("marshal request body: %v", err)
+	}
+	return string(raw)
+}
+
+func (h *liveSandboxHarness) initializeAppProfile(cfg liveSandboxConfig) {
+	h.t.Helper()
+
+	initResp := h.mustRunJSON(
+		"init",
+		"--env", "sandbox",
+		"--client-id", cfg.ClientID,
+		"--secret", cfg.Secret,
+		"--client-name", cfg.ClientName,
+	)
+	if got := requireStringField(h.t, initResp, "app_profile", "env"); got != "sandbox" {
+		h.t.Fatalf("init app_profile.env = %q, want sandbox", got)
+	}
+}
+
 func (h *liveSandboxHarness) trackItem(itemID, accessToken string) {
 	h.cleanupItems = append(h.cleanupItems, liveSandboxItem{
 		ItemID:      itemID,
 		AccessToken: accessToken,
 	})
+}
+
+func (h *liveSandboxHarness) trackUser(userID string) {
+	h.cleanupUsers = append(h.cleanupUsers, liveSandboxUser{
+		UserID: userID,
+	})
+}
+
+func (h *liveSandboxHarness) trackSubscription(subscriptionID string) {
+	h.cleanupSubscriptions = append(h.cleanupSubscriptions, subscriptionID)
 }
 
 func (h *liveSandboxHarness) untrackItem(itemID string) {
@@ -354,6 +625,67 @@ func (h *liveSandboxHarness) updateItemAccessToken(itemID, accessToken string) {
 		}
 	}
 	h.trackItem(itemID, accessToken)
+}
+
+func (h *liveSandboxHarness) createUser(prefix string, withIdentity bool) string {
+	h.t.Helper()
+
+	clientUserID := fmt.Sprintf("%s-%d", prefix, time.Now().UTC().UnixNano())
+	args := []string{"user", "create", "--client-user-id", clientUserID}
+	if withIdentity {
+		args = append(
+			args,
+			"--given-name", "Plaid",
+			"--family-name", "CLI",
+			"--date-of-birth", "1990-01-01",
+			"--email", clientUserID+"@example.com",
+			"--phone-number", "+14155550199",
+			"--street-1", "123 Main St",
+			"--city", "San Francisco",
+			"--region", "CA",
+			"--country", "US",
+			"--postal-code", "94105",
+			"--id-number", "1234",
+			"--id-number-type", "us_ssn_last_4",
+		)
+	}
+
+	resp := h.mustRunJSON(args...)
+	userID := requireStringField(h.t, resp, "user_id")
+	h.trackUser(userID)
+	return userID
+}
+
+func (h *liveSandboxHarness) createSandboxItem(cfg liveSandboxConfig, products []string, extraArgs ...string) liveSandboxItem {
+	h.t.Helper()
+
+	createArgs := []string{
+		"sandbox",
+		"public-token-create",
+		"--institution-id", cfg.InstitutionID,
+	}
+	createArgs = append(createArgs, extraArgs...)
+	for _, product := range products {
+		createArgs = append(createArgs, "--product", product)
+	}
+	publicTokenResp := h.mustRunJSON(createArgs...)
+	publicToken := requireStringField(h.t, publicTokenResp, "public_token")
+
+	exchangeArgs := []string{
+		"item",
+		"public-token-exchange",
+		"--public-token", publicToken,
+	}
+	for _, product := range products {
+		exchangeArgs = append(exchangeArgs, "--product", product)
+	}
+	exchangeResp := h.mustRunJSON(exchangeArgs...)
+	item := liveSandboxItem{
+		ItemID:      requireStringField(h.t, exchangeResp, "item_id"),
+		AccessToken: requireStringField(h.t, exchangeResp, "access_token"),
+	}
+	h.trackItem(item.ItemID, item.AccessToken)
+	return item
 }
 
 func (h *liveSandboxHarness) mustRunJSON(args ...string) map[string]any {
@@ -420,6 +752,18 @@ func (h *liveSandboxHarness) runJSON(args ...string) (map[string]any, error) {
 func (h *liveSandboxHarness) cleanup(t *testing.T, client *plaid.Client) {
 	t.Helper()
 
+	for i := len(h.cleanupSubscriptions) - 1; i >= 0; i-- {
+		subscriptionID := h.cleanupSubscriptions[i]
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		_, err := client.Call(ctx, "/cra/monitoring_insights/unsubscribe", map[string]any{
+			"subscription_id": subscriptionID,
+		})
+		cancel()
+		if err != nil {
+			t.Logf("cleanup: unsubscribe monitoring subscription %s: %v", subscriptionID, err)
+		}
+	}
+
 	for i := len(h.cleanupItems) - 1; i >= 0; i-- {
 		item := h.cleanupItems[i]
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -429,6 +773,18 @@ func (h *liveSandboxHarness) cleanup(t *testing.T, client *plaid.Client) {
 		cancel()
 		if err != nil {
 			t.Logf("cleanup: remove sandbox item %s: %v", item.ItemID, err)
+		}
+	}
+
+	for i := len(h.cleanupUsers) - 1; i >= 0; i-- {
+		user := h.cleanupUsers[i]
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		_, err := client.Call(ctx, "/user/remove", map[string]any{
+			"user_id": user.UserID,
+		})
+		cancel()
+		if err != nil {
+			t.Logf("cleanup: remove sandbox user %s: %v", user.UserID, err)
 		}
 	}
 }
