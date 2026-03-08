@@ -1,10 +1,6 @@
 package cmd
 
-import (
-	"errors"
-
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 func newAuthCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -22,7 +18,8 @@ func newAuthCmd() *cobra.Command {
 func newAuthGetCmd() *cobra.Command {
 	var itemID, accessToken string
 	var accountIDs []string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "get",
@@ -41,14 +38,15 @@ func newAuthGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
 				return err
 			}
-
-			body := map[string]any{"access_token": token}
-			if len(accountIDs) > 0 {
-				body["options"] = map[string]any{"account_ids": accountIDs}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "account-id", accountIDs, "options", "account_ids"); err != nil {
+				return err
 			}
 
 			ctx, cancel := commandContext()
@@ -62,6 +60,7 @@ func newAuthGetCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	cmd.Flags().StringSliceVar(&accountIDs, "account-id", nil, "Account ID to filter by (repeatable)")
@@ -70,7 +69,8 @@ func newAuthGetCmd() *cobra.Command {
 
 func newAuthVerifyCmd() *cobra.Command {
 	var accountNumber, routingNumber, legalName string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "verify",
@@ -91,24 +91,29 @@ func newAuthVerifyCmd() *cobra.Command {
 			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/products/auth/index.md", template); handled || err != nil {
 				return err
 			}
-			if accountNumber == "" || routingNumber == "" {
-				return errors.New("--account-number and --routing-number are required")
-			}
 
 			_, _, client, err := loadClientFromState(cmd)
 			if err != nil {
 				return err
 			}
-			body := map[string]any{
-				"numbers": map[string]any{
-					"ach": map[string]any{
-						"account": accountNumber,
-						"routing": routingNumber,
-					},
-				},
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
 			}
-			if legalName != "" {
-				body["legal_name"] = legalName
+			if err := applyStringFlag(cmd, body, "account-number", accountNumber, "numbers", "ach", "account"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "routing-number", routingNumber, "numbers", "ach", "routing"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "legal-name", legalName, "legal_name"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--account-number": {"numbers", "ach", "account"},
+				"--routing-number": {"numbers", "ach", "routing"},
+			}); err != nil {
+				return err
 			}
 
 			ctx, cancel := commandContext()
@@ -122,6 +127,7 @@ func newAuthVerifyCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&accountNumber, "account-number", "", "ACH account number to verify")
 	cmd.Flags().StringVar(&routingNumber, "routing-number", "", "ACH routing number to verify")
 	cmd.Flags().StringVar(&legalName, "legal-name", "", "Optional account owner legal name")
@@ -132,7 +138,8 @@ func newAuthBankTransferEventListCmd() *cobra.Command {
 	var startDate, endDate, bankTransferID, accountID, bankTransferType, originationAccountID, direction string
 	var eventTypes []string
 	var count, offset int
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "bank-transfer-event-list",
@@ -172,6 +179,40 @@ func newAuthBankTransferEventListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			body, err = loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "count", count, "count"); err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "offset", offset, "offset"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "start-date", startDate, "start_date"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "end-date", endDate, "end_date"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "bank-transfer-id", bankTransferID, "bank_transfer_id"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "account-id", accountID, "account_id"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "bank-transfer-type", bankTransferType, "bank_transfer_type"); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "event-type", eventTypes, "event_types"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "origination-account-id", originationAccountID, "origination_account_id"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "direction", direction, "direction"); err != nil {
+				return err
+			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
@@ -184,6 +225,7 @@ func newAuthBankTransferEventListCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&startDate, "start-date", "", "RFC3339 start timestamp")
 	cmd.Flags().StringVar(&endDate, "end-date", "", "RFC3339 end timestamp")
 	cmd.Flags().StringVar(&bankTransferID, "bank-transfer-id", "", "Specific bank_transfer_id to filter by")
@@ -199,7 +241,8 @@ func newAuthBankTransferEventListCmd() *cobra.Command {
 
 func newAuthBankTransferEventSyncCmd() *cobra.Command {
 	var afterID, count int
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "bank-transfer-event-sync",
@@ -218,6 +261,16 @@ func newAuthBankTransferEventSyncCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			body, err = loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "after-id", afterID, "after_id"); err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "count", count, "count"); err != nil {
+				return err
+			}
 			ctx, cancel := commandContext()
 			defer cancel()
 			resp, err := client.Call(ctx, "/bank_transfer/event/sync", body)
@@ -229,6 +282,7 @@ func newAuthBankTransferEventSyncCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().IntVar(&afterID, "after-id", 0, "Largest previously seen event_id, or 0 initially")
 	cmd.Flags().IntVar(&count, "count", 25, "Maximum number of events to return")
 	return cmd

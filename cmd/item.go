@@ -43,7 +43,8 @@ func newItemListCmd() *cobra.Command {
 
 func newItemGetCmd() *cobra.Command {
 	var itemID, accessToken string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "get",
@@ -60,15 +61,18 @@ func newItemGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
+				return err
+			}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
 				return err
 			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
 
-			resp, err := client.GetItem(ctx, token)
+			resp, err := client.Call(ctx, "/item/get", body)
 			if err != nil {
 				return err
 			}
@@ -77,6 +81,7 @@ func newItemGetCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	return cmd
@@ -84,7 +89,8 @@ func newItemGetCmd() *cobra.Command {
 
 func newItemRemoveCmd() *cobra.Command {
 	var itemID, accessToken string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "remove",
@@ -101,7 +107,11 @@ func newItemRemoveCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, record, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			record, err := populateAccessToken(cmd, store, body, itemID, accessToken)
 			if err != nil {
 				return err
 			}
@@ -109,7 +119,7 @@ func newItemRemoveCmd() *cobra.Command {
 			ctx, cancel := commandContext()
 			defer cancel()
 
-			resp, err := client.Call(ctx, "/item/remove", map[string]any{"access_token": token})
+			resp, err := client.Call(ctx, "/item/remove", body)
 			if err != nil {
 				return err
 			}
@@ -127,6 +137,7 @@ func newItemRemoveCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to remove")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	return cmd
@@ -134,7 +145,8 @@ func newItemRemoveCmd() *cobra.Command {
 
 func newItemInvalidateAccessTokenCmd() *cobra.Command {
 	var itemID, accessToken string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "access-token-invalidate",
@@ -151,7 +163,11 @@ func newItemInvalidateAccessTokenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, record, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			record, err := populateAccessToken(cmd, store, body, itemID, accessToken)
 			if err != nil {
 				return err
 			}
@@ -159,7 +175,7 @@ func newItemInvalidateAccessTokenCmd() *cobra.Command {
 			ctx, cancel := commandContext()
 			defer cancel()
 
-			resp, err := client.Call(ctx, "/item/access_token/invalidate", map[string]any{"access_token": token})
+			resp, err := client.Call(ctx, "/item/access_token/invalidate", body)
 			if err != nil {
 				return err
 			}
@@ -178,6 +194,7 @@ func newItemInvalidateAccessTokenCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to update")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	return cmd
@@ -185,7 +202,8 @@ func newItemInvalidateAccessTokenCmd() *cobra.Command {
 
 func newItemWebhookUpdateCmd() *cobra.Command {
 	var itemID, accessToken, webhookURL string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "webhook-update",
@@ -206,18 +224,25 @@ func newItemWebhookUpdateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
+				return err
+			}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "webhook-url", webhookURL, "webhook"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--webhook-url": {"webhook"},
+			}); err != nil {
 				return err
 			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
-
-			resp, err := client.Call(ctx, "/item/webhook/update", map[string]any{
-				"access_token": token,
-				"webhook":      webhookURL,
-			})
+			resp, err := client.Call(ctx, "/item/webhook/update", body)
 			if err != nil {
 				return err
 			}
@@ -226,6 +251,7 @@ func newItemWebhookUpdateCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to update")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	cmd.Flags().StringVar(&webhookURL, "webhook-url", "", "Webhook URL to set on the Item")

@@ -22,7 +22,8 @@ func newSandboxCmd() *cobra.Command {
 func newSandboxPublicTokenCreateCmd() *cobra.Command {
 	var institutionID string
 	var products []string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "public-token-create",
@@ -51,9 +52,21 @@ func newSandboxPublicTokenCreateCmd() *cobra.Command {
 				products = []string{"auth"}
 			}
 
-			body := map[string]any{
-				"institution_id":   institutionID,
-				"initial_products": products,
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "institution-id", institutionID, "institution_id"); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "product", products, "initial_products"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--institution-id": {"institution_id"},
+				"--product":        {"initial_products"},
+			}); err != nil {
+				return err
 			}
 
 			ctx, cancel := commandContext()
@@ -67,6 +80,7 @@ func newSandboxPublicTokenCreateCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&institutionID, "institution-id", "", "Sandbox institution_id")
 	cmd.Flags().StringSliceVar(&products, "product", nil, "Initial product to enable on the Sandbox Item (repeatable)")
 	return cmd
@@ -74,7 +88,8 @@ func newSandboxPublicTokenCreateCmd() *cobra.Command {
 
 func newSandboxItemResetLoginCmd() *cobra.Command {
 	var itemID, accessToken string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "item-reset-login",
@@ -91,14 +106,17 @@ func newSandboxItemResetLoginCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
+				return err
+			}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
 				return err
 			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
-			resp, err := client.Call(ctx, "/sandbox/item/reset_login", map[string]any{"access_token": token})
+			resp, err := client.Call(ctx, "/sandbox/item/reset_login", body)
 			if err != nil {
 				return err
 			}
@@ -107,6 +125,7 @@ func newSandboxItemResetLoginCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	return cmd
@@ -114,7 +133,8 @@ func newSandboxItemResetLoginCmd() *cobra.Command {
 
 func newSandboxItemFireWebhookCmd() *cobra.Command {
 	var itemID, accessToken, webhookCode string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "item-fire-webhook",
@@ -136,17 +156,25 @@ func newSandboxItemFireWebhookCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
+				return err
+			}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "webhook-code", webhookCode, "webhook_code"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--webhook-code": {"webhook_code"},
+			}); err != nil {
 				return err
 			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
-			resp, err := client.Call(ctx, "/sandbox/item/fire_webhook", map[string]any{
-				"access_token": token,
-				"webhook_code": webhookCode,
-			})
+			resp, err := client.Call(ctx, "/sandbox/item/fire_webhook", body)
 			if err != nil {
 				return err
 			}
@@ -155,6 +183,7 @@ func newSandboxItemFireWebhookCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	cmd.Flags().StringVar(&webhookCode, "webhook-code", "", "Sandbox webhook code to fire")

@@ -21,7 +21,8 @@ func newInstitutionCmd() *cobra.Command {
 func newInstitutionGetCmd() *cobra.Command {
 	var count, offset int
 	var countryCodes []string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "get",
@@ -33,20 +34,29 @@ func newInstitutionGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			countryCodes = defaultCountryCodes(profile, countryCodes)
-
-			template := map[string]any{
-				"count":         count,
-				"offset":        offset,
-				"country_codes": countryCodes,
-			}
+			template := map[string]any{"count": count, "offset": offset, "country_codes": defaultCountryCodes(profile, countryCodes)}
 			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/institutions/index.md", template); handled || err != nil {
+				return err
+			}
+
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			countryCodes = defaultCountryCodes(profile, countryCodes)
+			if err := applyIntFlag(cmd, body, "count", count, "count"); err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "offset", offset, "offset"); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "country-code", countryCodes, "country_codes"); err != nil {
 				return err
 			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
-			resp, err := client.Call(ctx, "/institutions/get", template)
+			resp, err := client.Call(ctx, "/institutions/get", body)
 			if err != nil {
 				return err
 			}
@@ -55,6 +65,7 @@ func newInstitutionGetCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().IntVar(&count, "count", 20, "Maximum institutions to return")
 	cmd.Flags().IntVar(&offset, "offset", 0, "Offset into institution list")
 	cmd.Flags().StringSliceVar(&countryCodes, "country-code", nil, "Country code filter (repeatable)")
@@ -64,7 +75,8 @@ func newInstitutionGetCmd() *cobra.Command {
 func newInstitutionGetByIDCmd() *cobra.Command {
 	var institutionID string
 	var countryCodes []string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "get-by-id",
@@ -82,11 +94,23 @@ func newInstitutionGetByIDCmd() *cobra.Command {
 			}
 			countryCodes = defaultCountryCodes(profile, countryCodes)
 
-			body := map[string]any{
-				"institution_id": institutionID,
-				"country_codes":  countryCodes,
-			}
+			body := map[string]any{"institution_id": institutionID, "country_codes": countryCodes}
 			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/institutions/index.md", body); handled || err != nil {
+				return err
+			}
+			body, err = loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "institution-id", institutionID, "institution_id"); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "country-code", countryCodes, "country_codes"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--institution-id": {"institution_id"},
+			}); err != nil {
 				return err
 			}
 
@@ -101,6 +125,7 @@ func newInstitutionGetByIDCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&institutionID, "institution-id", "", "Plaid institution_id")
 	cmd.Flags().StringSliceVar(&countryCodes, "country-code", nil, "Country code filter (repeatable)")
 	return cmd
@@ -110,7 +135,8 @@ func newInstitutionSearchCmd() *cobra.Command {
 	var query string
 	var products []string
 	var countryCodes []string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "search",
@@ -128,14 +154,29 @@ func newInstitutionSearchCmd() *cobra.Command {
 			}
 			countryCodes = defaultCountryCodes(profile, countryCodes)
 
-			body := map[string]any{
-				"query":         query,
-				"country_codes": countryCodes,
-			}
+			body := map[string]any{"query": query, "country_codes": countryCodes}
 			if len(products) > 0 {
 				body["products"] = products
 			}
 			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/institutions/index.md", body); handled || err != nil {
+				return err
+			}
+			body, err = loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "query", query, "query"); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "country-code", countryCodes, "country_codes"); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "product", products, "products"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--query": {"query"},
+			}); err != nil {
 				return err
 			}
 
@@ -150,6 +191,7 @@ func newInstitutionSearchCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&query, "query", "", "Institution search string")
 	cmd.Flags().StringSliceVar(&products, "product", nil, "Filter institutions by supported product (repeatable)")
 	cmd.Flags().StringSliceVar(&countryCodes, "country-code", nil, "Country code filter (repeatable)")

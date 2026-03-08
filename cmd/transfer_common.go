@@ -17,7 +17,7 @@ const (
 	transferAccountLinkingDocPath = "docs/plaid/api/products/transfer/account-linking/index.md"
 )
 
-func populateTransferAccess(cmd *cobra.Command, store *state.Store, body map[string]any, itemID, accessToken, accountID string) (*state.ItemRecord, error) {
+func populateAccessToken(cmd *cobra.Command, store *state.Store, body map[string]any, itemID, accessToken string) (*state.ItemRecord, error) {
 	var record *state.ItemRecord
 
 	if itemID != "" || accessToken != "" || !bodyHasValue(body, "access_token") {
@@ -29,16 +29,33 @@ func populateTransferAccess(cmd *cobra.Command, store *state.Store, body map[str
 		if err := setBodyValue(body, token, "access_token"); err != nil {
 			return nil, err
 		}
-	} else if rawToken, ok := bodyValue(body, "access_token"); ok {
-		token, ok := rawToken.(string)
-		if ok && token != "" {
-			resolvedRecord, err := store.FindItemByAccessToken(token)
-			if err == nil {
-				record = resolvedRecord
-			} else if !errors.Is(err, os.ErrNotExist) {
-				return nil, err
-			}
-		}
+		return record, nil
+	}
+
+	rawToken, ok := bodyValue(body, "access_token")
+	if !ok {
+		return nil, nil
+	}
+
+	token, ok := rawToken.(string)
+	if !ok || token == "" {
+		return nil, fmt.Errorf("request body field access_token must be a non-empty string")
+	}
+
+	resolvedRecord, err := store.FindItemByAccessToken(token)
+	if err == nil {
+		return resolvedRecord, nil
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	return nil, err
+}
+
+func populateTransferAccess(cmd *cobra.Command, store *state.Store, body map[string]any, itemID, accessToken, accountID string) (*state.ItemRecord, error) {
+	record, err := populateAccessToken(cmd, store, body, itemID, accessToken)
+	if err != nil {
+		return nil, err
 	}
 
 	if accountID != "" || !bodyHasValue(body, "account_id") {

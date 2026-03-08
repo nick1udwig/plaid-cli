@@ -1,10 +1,6 @@
 package cmd
 
-import (
-	"errors"
-
-	"github.com/spf13/cobra"
-)
+import "github.com/spf13/cobra"
 
 func newTransactionsCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -24,7 +20,8 @@ func newTransactionsGetCmd() *cobra.Command {
 	var itemID, accessToken, startDate, endDate string
 	var accountIDs []string
 	var count, offset int
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "get",
@@ -54,36 +51,38 @@ func newTransactionsGetCmd() *cobra.Command {
 			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/products/transactions/index.md", template); handled || err != nil {
 				return err
 			}
-			if startDate == "" || endDate == "" {
-				return errors.New("--start-date and --end-date are required")
-			}
 
 			store, _, client, err := loadClientFromState(cmd)
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
 				return err
 			}
-
-			body := map[string]any{
-				"access_token": token,
-				"start_date":   startDate,
-				"end_date":     endDate,
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
 			}
-			options := map[string]any{}
-			if len(accountIDs) > 0 {
-				options["account_ids"] = accountIDs
+			if err := applyStringFlag(cmd, body, "start-date", startDate, "start_date"); err != nil {
+				return err
 			}
-			if count != 100 {
-				options["count"] = count
+			if err := applyStringFlag(cmd, body, "end-date", endDate, "end_date"); err != nil {
+				return err
 			}
-			if offset != 0 {
-				options["offset"] = offset
+			if err := applyStringSliceFlag(cmd, body, "account-id", accountIDs, "options", "account_ids"); err != nil {
+				return err
 			}
-			if len(options) > 0 {
-				body["options"] = options
+			if err := applyIntFlag(cmd, body, "count", count, "options", "count"); err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "offset", offset, "options", "offset"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--start-date": {"start_date"},
+				"--end-date":   {"end_date"},
+			}); err != nil {
+				return err
 			}
 
 			ctx, cancel := commandContext()
@@ -97,6 +96,7 @@ func newTransactionsGetCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	cmd.Flags().StringVar(&startDate, "start-date", "", "Start date in YYYY-MM-DD")
@@ -111,7 +111,8 @@ func newTransactionsSyncCmd() *cobra.Command {
 	var itemID, accessToken, cursor, accountID, pfcVersion string
 	var count, daysRequested int
 	var includeOriginalDescription bool
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "sync",
@@ -149,20 +150,30 @@ func newTransactionsSyncCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
 				return err
 			}
-
-			body := map[string]any{
-				"access_token": token,
-				"count":        count,
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
 			}
-			if cursor != "" {
-				body["cursor"] = cursor
+			if err := applyIntFlag(cmd, body, "count", count, "count"); err != nil {
+				return err
 			}
-			if len(options) > 0 {
-				body["options"] = options
+			if err := applyStringFlag(cmd, body, "cursor", cursor, "cursor"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "account-id", accountID, "options", "account_id"); err != nil {
+				return err
+			}
+			if err := applyBoolFlag(cmd, body, "include-original-description", includeOriginalDescription, "options", "include_original_description"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "pfc-version", pfcVersion, "options", "personal_finance_category_version"); err != nil {
+				return err
+			}
+			if err := applyIntFlag(cmd, body, "days-requested", daysRequested, "options", "days_requested"); err != nil {
+				return err
 			}
 
 			ctx, cancel := commandContext()
@@ -176,6 +187,7 @@ func newTransactionsSyncCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	cmd.Flags().StringVar(&cursor, "cursor", "", "Previously saved sync cursor")
@@ -190,7 +202,8 @@ func newTransactionsSyncCmd() *cobra.Command {
 func newTransactionsRecurringGetCmd() *cobra.Command {
 	var itemID, accessToken, pfcVersion string
 	var accountIDs []string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "recurring-get",
@@ -212,17 +225,18 @@ func newTransactionsRecurringGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
 				return err
 			}
-
-			body := map[string]any{"access_token": token}
-			if len(accountIDs) > 0 {
-				body["account_ids"] = accountIDs
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
 			}
-			if pfcVersion != "" {
-				body["options"] = map[string]any{"personal_finance_category_version": pfcVersion}
+			if err := applyStringSliceFlag(cmd, body, "account-id", accountIDs, "account_ids"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "pfc-version", pfcVersion, "options", "personal_finance_category_version"); err != nil {
+				return err
 			}
 
 			ctx, cancel := commandContext()
@@ -236,6 +250,7 @@ func newTransactionsRecurringGetCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	cmd.Flags().StringSliceVar(&accountIDs, "account-id", nil, "Account ID to filter by (repeatable)")
@@ -245,7 +260,8 @@ func newTransactionsRecurringGetCmd() *cobra.Command {
 
 func newTransactionsRefreshCmd() *cobra.Command {
 	var itemID, accessToken string
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "refresh",
@@ -262,14 +278,17 @@ func newTransactionsRefreshCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			token, _, err := resolveAccessToken(cmd, store, itemID, accessToken)
+			body, err := loadRequestBody(bodyFlags.body)
 			if err != nil {
+				return err
+			}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
 				return err
 			}
 
 			ctx, cancel := commandContext()
 			defer cancel()
-			resp, err := client.Call(ctx, "/transactions/refresh", map[string]any{"access_token": token})
+			resp, err := client.Call(ctx, "/transactions/refresh", body)
 			if err != nil {
 				return err
 			}
@@ -278,13 +297,15 @@ func newTransactionsRefreshCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
 	return cmd
 }
 
 func newTransactionsCategoriesGetCmd() *cobra.Command {
-	info := bindInfoFlags(&cobra.Command{})
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
 
 	cmd := &cobra.Command{
 		Use:   "categories-get",
@@ -299,9 +320,13 @@ func newTransactionsCategoriesGetCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
 			ctx, cancel := commandContext()
 			defer cancel()
-			resp, err := client.Call(ctx, "/categories/get", map[string]any{})
+			resp, err := client.Call(ctx, "/categories/get", body)
 			if err != nil {
 				return err
 			}
@@ -310,5 +335,6 @@ func newTransactionsCategoriesGetCmd() *cobra.Command {
 	}
 
 	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
 	return cmd
 }
