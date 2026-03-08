@@ -43,7 +43,7 @@ This covers the core headless sandbox flow, plus:
 - `payment-initiation payment get/list`
 - `payment-initiation consent create/get`
 - `sandbox payment-simulate`
-- Transfer capabilities, authorization, create/get/list, refund create/get/cancel, recurring create/get/list/cancel, sandbox test-clock create/get/list/advance, sandbox simulate, and event reads when Transfer is enabled
+- Transfer capabilities, authorization, create/get/list, `sandbox transfer fire-webhook`, refund create/get/cancel, `sandbox transfer refund-simulate`, recurring create/get/list/cancel, sandbox test-clock create/get/list/advance, sandbox simulate, and event reads when Transfer is enabled
 
 Notes:
 
@@ -51,6 +51,7 @@ Notes:
 - Webhook delivery coverage uses a disposable `webhook.site` inbox. If `webhook.site` is unavailable, that one test skips and the rest of `just test-live` still runs.
 - The Payment Initiation path runs as part of `just test-live`. On this sandbox account it worked without extra env vars. If it fails on another account with a product-access error, enable or request `Payment Initiation` under `Team Settings -> Products`.
 - The Transfer path runs as part of `just test-live` and self-skips when the app lacks Transfer access. If you want that coverage, enable or request `Transfer` under `Team Settings -> Products`.
+- `sandbox transfer sweep-simulate` is exercised on the default Transfer path, but Plaid may legitimately return `sweep: null` if there is nothing sweepable yet in the current sandbox state. In that case the suite logs the condition and skips only the sweep readback assertions.
 
 ## Income Suite
 

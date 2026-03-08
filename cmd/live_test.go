@@ -757,33 +757,25 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		"--amount", "1.00",
 		"--description", "live transfer",
 	)
+	transferCreatedAt := time.Now().UTC()
 	transferID := requireStringField(t, createResp, "transfer", "id")
-	refundResp := harness.mustRunJSON(
+	refundSimResp := harness.mustRunJSON(
 		"transfer",
 		"refund",
 		"create",
 		"--transfer-id", transferID,
 		"--amount", "0.50",
-		"--idempotency-key", fmt.Sprintf("refund-%d", time.Now().UTC().UnixNano()),
+		"--idempotency-key", fmt.Sprintf("refund-sim-%d", time.Now().UTC().UnixNano()),
 	)
-	refundID := requireStringField(t, refundResp, "refund", "id")
-	refundGetResp := harness.mustRunJSON(
+	refundSimID := requireStringField(t, refundSimResp, "refund", "id")
+	refundSimGetResp := harness.mustRunJSON(
 		"transfer",
 		"refund",
 		"get",
-		"--refund-id", refundID,
+		"--refund-id", refundSimID,
 	)
-	if got := requireStringField(t, refundGetResp, "refund", "id"); got != refundID {
-		t.Fatalf("transfer refund.get refund.id = %q, want %q", got, refundID)
-	}
-	refundCancelResp := harness.mustRunJSON(
-		"transfer",
-		"refund",
-		"cancel",
-		"--refund-id", refundID,
-	)
-	if requireStringField(t, refundCancelResp, "request_id") == "" {
-		t.Fatal("transfer refund.cancel did not include request_id")
+	if got := requireStringField(t, refundSimGetResp, "refund", "id"); got != refundSimID {
+		t.Fatalf("transfer refund.get refund.id = %q, want %q", got, refundSimID)
 	}
 
 	getResp := harness.mustRunJSON("transfer", "get", "--transfer-id", transferID)
@@ -791,7 +783,13 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		t.Fatalf("transfer.get transfer.id = %q, want %q", got, transferID)
 	}
 
-	listResp := harness.mustRunJSON("transfer", "list", "--count", "10")
+	listResp := harness.mustRunJSON(
+		"transfer",
+		"list",
+		"--count", "25",
+		"--start-date", transferCreatedAt.Add(-1*time.Hour).Format(time.RFC3339),
+		"--end-date", transferCreatedAt.Add(1*time.Hour).Format(time.RFC3339),
+	)
 	if !arrayContainsMapField(requireArrayField(t, listResp, "transfers"), "id", transferID) {
 		t.Fatalf("transfer.list did not include transfer %q", transferID)
 	}
@@ -821,6 +819,7 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		"--start-date", recurringStartDate.Format("2006-01-02"),
 		"--test-clock-id", testClockID,
 	)
+	recurringCreatedAt := time.Now().UTC()
 	recurringTransferID := requireStringField(t, recurringResp, "recurring_transfer", "recurring_transfer_id")
 	recurringGetResp := harness.mustRunJSON(
 		"transfer",
@@ -835,7 +834,9 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		"transfer",
 		"recurring",
 		"list",
-		"--count", "10",
+		"--count", "25",
+		"--start-time", recurringCreatedAt.Add(-1*time.Hour).Format(time.RFC3339),
+		"--end-time", recurringCreatedAt.Add(1*time.Hour).Format(time.RFC3339),
 	)
 	if !arrayContainsMapField(requireArrayField(t, recurringListResp, "recurring_transfers"), "recurring_transfer_id", recurringTransferID) {
 		t.Fatalf("transfer recurring.list did not include recurring transfer %q", recurringTransferID)
@@ -872,6 +873,48 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		t.Fatal("transfer recurring.cancel did not include request_id")
 	}
 
+	transferWebhookInbox, err := newLiveWebhookInbox()
+	if err != nil {
+		t.Logf("skipping sandbox transfer fire-webhook delivery check: %v", err)
+	} else {
+		fireWebhookResp := harness.mustRunJSON(
+			"sandbox",
+			"transfer",
+			"fire-webhook",
+			"--webhook", transferWebhookInbox.url,
+		)
+		if requireStringField(t, fireWebhookResp, "request_id") == "" {
+			t.Fatal("sandbox transfer fire-webhook did not include request_id")
+		}
+		request, payload := transferWebhookInbox.mustWaitForJSONRequest(t, 45*time.Second, func(body map[string]any) bool {
+			webhookType, ok := bodyValue(body, "webhook_type")
+			if !ok || webhookType != "TRANSFER" {
+				return false
+			}
+			webhookCode, ok := bodyValue(body, "webhook_code")
+			return ok && webhookCode == "TRANSFER_EVENTS_UPDATE"
+		})
+		if got := requireStringField(t, payload, "webhook_type"); got != "TRANSFER" {
+			t.Fatalf("captured transfer webhook webhook_type = %q, want TRANSFER", got)
+		}
+		if got := requireStringField(t, payload, "webhook_code"); got != "TRANSFER_EVENTS_UPDATE" {
+			t.Fatalf("captured transfer webhook webhook_code = %q, want TRANSFER_EVENTS_UPDATE", got)
+		}
+		plaidVerification := request.headerValue("plaid-verification")
+		if plaidVerification == "" {
+			t.Fatal("captured transfer webhook did not include plaid-verification header")
+		}
+		verifyResp := harness.mustRunJSON(
+			"webhook",
+			"verification-key",
+			"get",
+			"--plaid-verification", plaidVerification,
+		)
+		if requireStringField(t, verifyResp, "key", "kid") == "" {
+			t.Fatal("transfer webhook verification-key.get did not include key.kid")
+		}
+	}
+
 	simulateResp := harness.mustRunJSON(
 		"sandbox",
 		"transfer",
@@ -899,7 +942,94 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		t.Fatal("transfer event.list did not include a posted event after sandbox transfer simulate")
 	}
 
-	eventSyncResp := harness.mustRunJSON("transfer", "event", "sync", "--after-id", "0", "--count", "25")
+	sweepSimResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"sweep-simulate",
+	)
+	if sweepID, ok := bodyValue(sweepSimResp, "sweep", "id"); ok {
+		sweepIDString, ok := sweepID.(string)
+		if !ok || strings.TrimSpace(sweepIDString) == "" {
+			t.Fatalf("sandbox transfer sweep-simulate sweep.id = %#v, want non-empty string", sweepID)
+		}
+		sweepGetResp := harness.mustRunJSON(
+			"transfer",
+			"sweep",
+			"get",
+			"--sweep-id", sweepIDString,
+		)
+		if got := requireStringField(t, sweepGetResp, "sweep", "id"); got != sweepIDString {
+			t.Fatalf("transfer sweep.get sweep.id = %q, want %q", got, sweepIDString)
+		}
+		sweepListResp := harness.mustRunJSON(
+			"transfer",
+			"sweep",
+			"list",
+			"--count", "25",
+			"--transfer-id", transferID,
+		)
+		if !arrayContainsMapField(requireArrayField(t, sweepListResp, "sweeps"), "id", sweepIDString) {
+			t.Fatalf("transfer sweep.list did not include sweep %q", sweepIDString)
+		}
+	} else {
+		t.Log("sandbox transfer sweep-simulate returned no sweep; skipping sweep get/list assertions")
+	}
+
+	refundSimulateResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"refund-simulate",
+		"--refund-id", refundSimID,
+		"--event-type", "refund.failed",
+	)
+	if requireStringField(t, refundSimulateResp, "request_id") == "" {
+		t.Fatal("sandbox transfer refund-simulate did not include request_id")
+	}
+	foundRefundFailedEvent := false
+	for attempt := 1; attempt <= 10; attempt++ {
+		eventListResp := harness.mustRunJSON("transfer", "event", "list", "--transfer-id", transferID, "--count", "25")
+		if arrayContainsMapFieldValue(requireArrayField(t, eventListResp, "transfer_events"), "event_type", "refund.failed") {
+			foundRefundFailedEvent = true
+			break
+		}
+		if attempt < 10 {
+			t.Logf("transfer event.list has not shown refund.failed yet (attempt %d/10); retrying", attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !foundRefundFailedEvent {
+		t.Fatal("transfer event.list did not include refund.failed after sandbox transfer refund-simulate")
+	}
+
+	refundCancelResp := harness.mustRunJSON(
+		"transfer",
+		"refund",
+		"create",
+		"--transfer-id", transferID,
+		"--amount", "0.25",
+		"--idempotency-key", fmt.Sprintf("refund-cancel-%d", time.Now().UTC().UnixNano()),
+	)
+	refundCancelID := requireStringField(t, refundCancelResp, "refund", "id")
+	refundCancelAckResp := harness.mustRunJSON(
+		"transfer",
+		"refund",
+		"cancel",
+		"--refund-id", refundCancelID,
+	)
+	if requireStringField(t, refundCancelAckResp, "request_id") == "" {
+		t.Fatal("transfer refund.cancel did not include request_id")
+	}
+
+	latestTransferEventsResp := harness.mustRunJSON("transfer", "event", "list", "--transfer-id", transferID, "--count", "25")
+	latestTransferEventID, ok := maxMapIntField(requireArrayField(t, latestTransferEventsResp, "transfer_events"), "event_id")
+	if !ok {
+		t.Fatal("transfer event.list did not include any event_id values for event.sync validation")
+	}
+	afterID := latestTransferEventID - 1
+	if afterID < 0 {
+		afterID = 0
+	}
+	eventSyncResp := harness.mustRunJSON("transfer", "event", "sync", "--after-id", fmt.Sprintf("%d", afterID), "--count", "25")
 	if !arrayContainsMapField(requireArrayField(t, eventSyncResp, "transfer_events"), "transfer_id", transferID) {
 		t.Fatalf("transfer event.sync did not include transfer %q", transferID)
 	}
@@ -1436,6 +1566,47 @@ func arrayContainsMapField(values []any, field, want string) bool {
 
 func arrayContainsMapFieldValue(values []any, field, want string) bool {
 	return arrayContainsMapField(values, field, want)
+}
+
+func maxMapIntField(values []any, field string) (int, bool) {
+	found := false
+	maxValue := 0
+	for _, raw := range values {
+		entry, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		rawValue, ok := entry[field]
+		if !ok {
+			continue
+		}
+
+		var value int
+		switch typed := rawValue.(type) {
+		case float64:
+			value = int(typed)
+		case float32:
+			value = int(typed)
+		case int:
+			value = typed
+		case int64:
+			value = int(typed)
+		case json.Number:
+			parsed, err := typed.Int64()
+			if err != nil {
+				continue
+			}
+			value = int(parsed)
+		default:
+			continue
+		}
+
+		if !found || value > maxValue {
+			maxValue = value
+			found = true
+		}
+	}
+	return maxValue, found
 }
 
 func isTransferUnavailableError(err error) bool {
