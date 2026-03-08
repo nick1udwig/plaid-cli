@@ -40,8 +40,10 @@ This covers the core headless sandbox flow, plus:
 - `liabilities get`
 - `investments holdings-get`
 - `investments transactions-get`
-- `signal evaluate`
-- `statements list`
+- `investments refresh`
+- `signal evaluate`, `signal prepare`, `signal decision-report`, and `signal return-report`
+- `statements list`, `statements refresh`, and `statements download`
+- `assets report create/get/pdf-get/remove`
 - broader item-webhook delivery plus `webhook verification-key get`
 - `payment-initiation recipient create`
 - `payment-initiation recipient get/list`

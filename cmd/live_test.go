@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -582,6 +583,14 @@ func TestLiveSandboxAdditionalReadProductsSuite(t *testing.T) {
 		if _, ok := bodyValue(transactionsResp, "investment_transactions"); !ok {
 			t.Fatal("investments transactions-get did not include investment_transactions")
 		}
+
+		refreshResp, err := harness.runJSON("investments", "refresh", "--item", item.ItemID)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "investments refresh", err)
+		}
+		if requireStringField(t, refreshResp, "request_id") == "" {
+			t.Fatal("investments refresh did not include request_id")
+		}
 	})
 
 	t.Run("signal evaluate", func(t *testing.T) {
@@ -590,13 +599,14 @@ func TestLiveSandboxAdditionalReadProductsSuite(t *testing.T) {
 			skipUnavailableLiveProduct(t, "signal bootstrap auth item", err)
 		}
 		accountID := harness.requireItemAccountID(item.ItemID)
+		clientTransactionID := fmt.Sprintf("signal-live-%d", time.Now().UTC().UnixNano())
 
 		resp, err := harness.runJSON(
 			"signal",
 			"evaluate",
 			"--item", item.ItemID,
 			"--account-id", accountID,
-			"--client-transaction-id", fmt.Sprintf("signal-live-%d", time.Now().UTC().UnixNano()),
+			"--client-transaction-id", clientTransactionID,
 			"--amount", "12.34",
 		)
 		if err != nil {
@@ -604,6 +614,40 @@ func TestLiveSandboxAdditionalReadProductsSuite(t *testing.T) {
 		}
 		if requireStringField(t, resp, "request_id") == "" {
 			t.Fatal("signal.evaluate did not include request_id")
+		}
+
+		prepareResp, err := harness.runJSON("signal", "prepare", "--item", item.ItemID)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "signal prepare", err)
+		}
+		if requireStringField(t, prepareResp, "request_id") == "" {
+			t.Fatal("signal.prepare did not include request_id")
+		}
+
+		decisionReportResp, err := harness.runJSON(
+			"signal",
+			"decision-report",
+			"--client-transaction-id", clientTransactionID,
+			"--initiated",
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "signal decision-report", err)
+		}
+		if requireStringField(t, decisionReportResp, "request_id") == "" {
+			t.Fatal("signal.decision-report did not include request_id")
+		}
+
+		returnReportResp, err := harness.runJSON(
+			"signal",
+			"return-report",
+			"--client-transaction-id", clientTransactionID,
+			"--return-code", "R01",
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "signal return-report", err)
+		}
+		if requireStringField(t, returnReportResp, "request_id") == "" {
+			t.Fatal("signal.return-report did not include request_id")
 		}
 	})
 
@@ -630,8 +674,164 @@ func TestLiveSandboxAdditionalReadProductsSuite(t *testing.T) {
 		if err != nil {
 			skipUnavailableLiveProduct(t, "statements", err)
 		}
-		if len(requireArrayField(t, resp, "accounts")) == 0 {
+		accounts := requireArrayField(t, resp, "accounts")
+		if len(accounts) == 0 {
 			t.Fatal("statements.list returned no accounts")
+		}
+
+		refreshResp, err := harness.runJSON(
+			"statements",
+			"refresh",
+			"--item", item.ItemID,
+			"--start-date", statementStartDate,
+			"--end-date", statementEndDate,
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "statements refresh", err)
+		}
+		if requireStringField(t, refreshResp, "request_id") == "" {
+			t.Fatal("statements.refresh did not include request_id")
+		}
+
+		statementID := ""
+		for _, rawAccount := range accounts {
+			account, ok := rawAccount.(map[string]any)
+			if !ok {
+				continue
+			}
+			rawStatements, ok := account["statements"].([]any)
+			if !ok {
+				continue
+			}
+			for _, rawStatement := range rawStatements {
+				statement, ok := rawStatement.(map[string]any)
+				if !ok {
+					continue
+				}
+				if id, ok := statement["statement_id"].(string); ok && strings.TrimSpace(id) != "" {
+					statementID = id
+					break
+				}
+			}
+			if statementID != "" {
+				break
+			}
+		}
+		if statementID == "" {
+			t.Fatal("statements.list did not return any statement_id values")
+		}
+
+		outPath := filepath.Join(t.TempDir(), "statement.pdf")
+		downloadResp, err := harness.runJSON(
+			"statements",
+			"download",
+			"--item", item.ItemID,
+			"--statement-id", statementID,
+			"--out", outPath,
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "statements download", err)
+		}
+		if requireStringField(t, downloadResp, "path") != outPath {
+			t.Fatalf("statements.download path = %q, want %q", requireStringField(t, downloadResp, "path"), outPath)
+		}
+		info, statErr := os.Stat(outPath)
+		if statErr != nil {
+			t.Fatalf("statements.download output stat error = %v", statErr)
+		}
+		if info.Size() == 0 {
+			t.Fatal("statements.download wrote an empty file")
+		}
+	})
+
+	t.Run("asset report create get pdf remove", func(t *testing.T) {
+		item, err := harness.tryCreateSandboxItem(cfg, []string{"assets"})
+		if err != nil {
+			skipUnavailableLiveProduct(t, "assets", err)
+		}
+
+		createResp, err := harness.runJSON(
+			"assets",
+			"report",
+			"create",
+			"--item", item.ItemID,
+			"--days-requested", "30",
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "assets report create", err)
+		}
+		assetReportToken := requireStringField(t, createResp, "asset_report_token")
+
+		var getResp map[string]any
+		ready := false
+		for attempt := 1; attempt <= 20; attempt++ {
+			getResp, err = harness.runJSON(
+				"assets",
+				"report",
+				"get",
+				"--asset-report-token", assetReportToken,
+			)
+			if err == nil {
+				ready = true
+				break
+			}
+
+			var apiErr *plaid.APIError
+			if errors.As(err, &apiErr) && apiErr.ErrorCode == "PRODUCT_NOT_READY" && attempt < 20 {
+				t.Logf("asset_report/get not ready yet (attempt %d/20); retrying", attempt)
+				time.Sleep(3 * time.Second)
+				continue
+			}
+			skipUnavailableLiveProduct(t, "assets report get", err)
+		}
+		if !ready {
+			t.Fatal("assets report get did not become ready")
+		}
+		if requireStringField(t, getResp, "report", "asset_report_id") == "" {
+			t.Fatal("assets report get did not include report.asset_report_id")
+		}
+		if len(requireArrayField(t, getResp, "report", "items")) == 0 {
+			t.Fatal("assets report get returned no report.items")
+		}
+
+		outPath := filepath.Join(t.TempDir(), "asset-report.pdf")
+		pdfResp, err := harness.runJSON(
+			"assets",
+			"report",
+			"pdf-get",
+			"--asset-report-token", assetReportToken,
+			"--out", outPath,
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "assets report pdf-get", err)
+		}
+		if requireStringField(t, pdfResp, "path") != outPath {
+			t.Fatalf("assets report pdf-get path = %q, want %q", requireStringField(t, pdfResp, "path"), outPath)
+		}
+		info, statErr := os.Stat(outPath)
+		if statErr != nil {
+			t.Fatalf("assets report pdf-get output stat error = %v", statErr)
+		}
+		if info.Size() == 0 {
+			t.Fatal("assets report pdf-get wrote an empty file")
+		}
+
+		removeResp, err := harness.runJSON(
+			"assets",
+			"report",
+			"remove",
+			"--asset-report-token", assetReportToken,
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "assets report remove", err)
+		}
+		removed, ok := bodyValue(removeResp, "removed")
+		if !ok {
+			t.Fatal("assets report remove did not include removed")
+		}
+		removedBool, ok := removed.(bool)
+		if !ok || !removedBool {
+			t.Fatalf("assets report remove removed = %#v, want true", removed)
 		}
 	})
 }
