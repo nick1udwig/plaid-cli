@@ -26,7 +26,7 @@ func newTransferIntentCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /transfer/intent/create",
-		Long:  "Capability: write. Creates a Transfer intent for Transfer UI flows.",
+		Long:  "Capabilities: write, move-money. Creates a Transfer intent for Transfer UI flows.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"mode":        "PAYMENT",

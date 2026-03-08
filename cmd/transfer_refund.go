@@ -24,7 +24,7 @@ func newTransferRefundCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /transfer/refund/create",
-		Long:  "Capability: write. Creates a refund for a transfer.",
+		Long:  "Capabilities: write, move-money. Creates a refund for a transfer.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"transfer_id":     "<transfer-id>",
@@ -136,7 +136,7 @@ func newTransferRefundCancelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel",
 		Short: "Call /transfer/refund/cancel",
-		Long:  "Capability: write. Cancels a refund that has not yet been submitted to the payment network.",
+		Long:  "Capabilities: write, move-money. Cancels a refund that has not yet been submitted to the payment network.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"refund_id": "<refund-id>",

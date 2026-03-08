@@ -34,7 +34,7 @@ func newPaymentInitiationConsentCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /payment_initiation/consent/create",
-		Long:  "Capability: write. Creates a payment consent that can later be used to initiate payments on behalf of the user.",
+		Long:  "Capabilities: write, move-money. Creates a payment consent that can later be used to initiate payments on behalf of the user.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"recipient_id": "<recipient-id>",
@@ -235,7 +235,7 @@ func newPaymentInitiationConsentRevokeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke",
 		Short: "Call /payment_initiation/consent/revoke",
-		Long:  "Capability: write. Revokes a Payment Initiation consent so it can no longer be used.",
+		Long:  "Capabilities: write, move-money. Revokes a Payment Initiation consent so it can no longer be used.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{"consent_id": "<consent-id>"}
 			if handled, err := maybeWriteInfo(cmd, info, paymentInitiationDocPath, template); handled || err != nil {
@@ -283,7 +283,7 @@ func newPaymentInitiationConsentPaymentExecuteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "payment-execute",
 		Short: "Call /payment_initiation/consent/payment/execute",
-		Long:  "Capability: write. Executes a payment using a previously authorised payment consent.",
+		Long:  "Capabilities: write, move-money. Executes a payment using a previously authorised payment consent.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"consent_id":      "<consent-id>",

@@ -32,7 +32,7 @@ func newTransferRecurringCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /transfer/recurring/create",
-		Long:  "Capability: write. Creates a recurring transfer schedule and future transfer originations.",
+		Long:  "Capabilities: write, move-money. Creates a recurring transfer schedule and future transfer originations.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"access_token":    "<access-token>",
@@ -193,7 +193,7 @@ func newTransferRecurringCancelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel",
 		Short: "Call /transfer/recurring/cancel",
-		Long:  "Capability: write. Cancels a recurring transfer and any future unsent originations.",
+		Long:  "Capabilities: write, move-money. Cancels a recurring transfer and any future unsent originations.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"recurring_transfer_id": "<recurring-transfer-id>",

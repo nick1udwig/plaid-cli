@@ -17,7 +17,7 @@ func newTransferCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /transfer/create",
-		Long:  "Capability: write. Creates a transfer from an approved transfer authorization.",
+		Long:  "Capabilities: write, move-money. Creates a transfer from an approved transfer authorization.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"access_token":     "<access-token>",
@@ -230,7 +230,7 @@ func newTransferCancelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel",
 		Short: "Call /transfer/cancel",
-		Long:  "Capability: write. Cancels a transfer that has not yet been submitted to the payment network.",
+		Long:  "Capabilities: write, move-money. Cancels a transfer that has not yet been submitted to the payment network.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"transfer_id": "<transfer-id>",

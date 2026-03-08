@@ -26,7 +26,7 @@ func newTransferLedgerDepositCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit",
 		Short: "Call /transfer/ledger/deposit",
-		Long:  "Capability: write. Deposits funds into a Plaid Ledger balance.",
+		Long:  "Capabilities: write, move-money. Deposits funds into a Plaid Ledger balance.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"amount":          "12.34",
@@ -104,7 +104,7 @@ func newTransferLedgerDistributeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "distribute",
 		Short: "Call /transfer/ledger/distribute",
-		Long:  "Capability: write. Moves available balance between Plaid Ledger balances.",
+		Long:  "Capabilities: write, move-money. Moves available balance between Plaid Ledger balances.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"from_ledger_id":  "<from-ledger-id>",
@@ -223,7 +223,7 @@ func newTransferLedgerWithdrawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "withdraw",
 		Short: "Call /transfer/ledger/withdraw",
-		Long:  "Capability: write. Withdraws funds from a Plaid Ledger balance.",
+		Long:  "Capabilities: write, move-money. Withdraws funds from a Plaid Ledger balance.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"amount":          "12.34",

@@ -32,7 +32,7 @@ func newPaymentInitiationPaymentCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /payment_initiation/payment/create",
-		Long:  "Capability: write. Creates a Payment Initiation payment or standing order.",
+		Long:  "Capabilities: write, move-money. Creates a Payment Initiation payment or standing order.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"recipient_id": "<recipient-id>",
@@ -257,7 +257,7 @@ func newPaymentInitiationPaymentReverseCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reverse",
 		Short: "Call /payment_initiation/payment/reverse",
-		Long:  "Capability: write. Reverses a settled payment from a Plaid virtual account.",
+		Long:  "Capabilities: write, move-money. Reverses a settled payment from a Plaid virtual account.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"payment_id":      "<payment-id>",

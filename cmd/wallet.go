@@ -219,7 +219,7 @@ func newWalletTransactionExecuteCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "execute",
 		Short: "Call /wallet/transaction/execute",
-		Long:  "Capability: write. Executes a payout or related wallet transaction from a virtual account.",
+		Long:  "Capabilities: write, move-money. Executes a payout or related wallet transaction from a virtual account.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"idempotency_key": "<idempotency-key>",

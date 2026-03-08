@@ -31,7 +31,7 @@ func newTransferAuthorizationCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Call /transfer/authorization/create",
-		Long:  "Capability: write. Creates a Transfer authorization, which is required before creating a transfer.",
+		Long:  "Capabilities: write, move-money. Creates a Transfer authorization, which is required before creating a transfer.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"access_token": "<access-token>",
@@ -162,7 +162,7 @@ func newTransferAuthorizationCancelCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel",
 		Short: "Call /transfer/authorization/cancel",
-		Long:  "Capability: write. Cancels an unused transfer authorization.",
+		Long:  "Capabilities: write, move-money. Cancels an unused transfer authorization.",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			template := map[string]any{
 				"authorization_id": "<authorization-id>",
