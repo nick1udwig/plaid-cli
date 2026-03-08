@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -29,6 +31,8 @@ const (
 	liveIncomeItemIDEnv       = "PLAID_LIVE_INCOME_ITEM_ID"
 	liveCheckUserIDEnv        = "PLAID_LIVE_CHECK_USER_ID"
 	liveCheckItemIDEnv        = "PLAID_LIVE_CHECK_ITEM_ID"
+	liveWebhookSiteTokenURL   = "https://webhook.site/token"
+	liveWebhookSiteBaseURL    = "https://webhook.site"
 )
 
 type liveSandboxConfig struct {
@@ -45,6 +49,21 @@ type liveSandboxItem struct {
 
 type liveSandboxUser struct {
 	UserID string
+}
+
+type webhookSiteTokenResponse struct {
+	UUID string `json:"uuid"`
+}
+
+type webhookSiteRequestsResponse struct {
+	Data []webhookSiteRequest `json:"data"`
+}
+
+type webhookSiteRequest struct {
+	Method  string              `json:"method"`
+	URL     string              `json:"url"`
+	Headers map[string][]string `json:"headers"`
+	Content string              `json:"content"`
 }
 
 type liveSandboxHarness struct {
@@ -335,6 +354,11 @@ func TestLiveSandboxDynamicTransactionsSuite(t *testing.T) {
 	cursor := requireStringField(t, beforeSyncResp, "next_cursor")
 
 	today := time.Now().UTC().Format("2006-01-02")
+	refreshResp := harness.mustRunJSON("transactions", "refresh", "--item", item.ItemID)
+	if requireStringField(t, refreshResp, "request_id") == "" {
+		t.Fatal("transactions.refresh did not include request_id")
+	}
+
 	createResp := harness.mustRunJSON(
 		"sandbox",
 		"transactions-create",
@@ -374,7 +398,7 @@ func TestLiveSandboxDynamicTransactionsSuite(t *testing.T) {
 	}
 }
 
-func TestLiveSandboxProcessorTokenCreate(t *testing.T) {
+func TestLiveSandboxProcessorSuite(t *testing.T) {
 	cfg := loadLiveSandboxConfig(t)
 
 	harness := newLiveSandboxHarness(t)
@@ -385,8 +409,85 @@ func TestLiveSandboxProcessorTokenCreate(t *testing.T) {
 		"processor-token-create",
 		"--institution-id", cfg.InstitutionID,
 	)
-	if requireStringField(t, resp, "processor_token") == "" {
+	processorToken := requireStringField(t, resp, "processor_token")
+	if processorToken == "" {
 		t.Fatal("sandbox processor-token-create did not include processor_token")
+	}
+
+	permissionsResp := harness.mustRunJSON("processor", "token-permissions-get", "--processor-token", processorToken)
+	if requireStringField(t, permissionsResp, "request_id") == "" {
+		t.Fatal("processor token-permissions-get did not include request_id")
+	}
+
+	accountResp := harness.mustRunJSON("processor", "account", "get", "--processor-token", processorToken)
+	if requireStringField(t, accountResp, "account", "account_id") == "" {
+		t.Fatal("processor account.get did not include account.account_id")
+	}
+
+	authResp := harness.mustRunJSON("processor", "auth", "get", "--processor-token", processorToken)
+	if requireStringField(t, authResp, "numbers", "ach", "account") == "" {
+		t.Fatal("processor auth.get did not include numbers.ach.account")
+	}
+
+	balanceResp := harness.mustRunJSON("processor", "balance", "get", "--processor-token", processorToken)
+	if requireStringField(t, balanceResp, "account", "account_id") == "" {
+		t.Fatal("processor balance.get did not include account.account_id")
+	}
+
+	identityResp := harness.mustRunJSON("processor", "identity", "get", "--processor-token", processorToken)
+	if requireStringField(t, identityResp, "account", "account_id") == "" {
+		t.Fatal("processor identity.get did not include account.account_id")
+	}
+
+	startDate := time.Now().UTC().AddDate(0, 0, -365).Format("2006-01-02")
+	endDate := time.Now().UTC().Format("2006-01-02")
+	transactionsGetResp := harness.mustRunJSONRetryProductReady(
+		10,
+		3*time.Second,
+		"processor",
+		"transactions",
+		"get",
+		"--processor-token", processorToken,
+		"--start-date", startDate,
+		"--end-date", endDate,
+		"--count", "25",
+	)
+	if len(requireArrayField(t, transactionsGetResp, "transactions")) == 0 {
+		t.Fatal("processor transactions.get returned no transactions")
+	}
+
+	transactionsSyncResp := harness.mustRunJSONRetryProductReady(
+		10,
+		3*time.Second,
+		"processor",
+		"transactions",
+		"sync",
+		"--processor-token", processorToken,
+		"--count", "25",
+	)
+	if requireStringField(t, transactionsSyncResp, "next_cursor") == "" {
+		t.Fatal("processor transactions.sync did not include next_cursor")
+	}
+
+	transactionsRecurringResp := harness.mustRunJSONRetryProductReady(
+		10,
+		3*time.Second,
+		"processor",
+		"transactions",
+		"recurring-get",
+		"--processor-token", processorToken,
+	)
+	requireArrayField(t, transactionsRecurringResp, "inflow_streams")
+	requireArrayField(t, transactionsRecurringResp, "outflow_streams")
+
+	transactionsRefreshResp := harness.mustRunJSON(
+		"processor",
+		"transactions",
+		"refresh",
+		"--processor-token", processorToken,
+	)
+	if requireStringField(t, transactionsRefreshResp, "request_id") == "" {
+		t.Fatal("processor transactions.refresh did not include request_id")
 	}
 }
 
@@ -425,6 +526,172 @@ func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 	)
 	if requireStringField(t, simulateResp, "request_id") == "" {
 		t.Fatal("sandbox payment-simulate did not include request_id")
+	}
+}
+
+func TestLiveSandboxWebhookDeliverySuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	harness := newLiveSandboxHarness(t)
+	cleanupClient := newLiveSandboxClient(t, cfg)
+	t.Cleanup(func() {
+		harness.cleanup(t, cleanupClient)
+	})
+
+	harness.initializeAppProfile(cfg)
+	inbox, err := newLiveWebhookInbox()
+	if err != nil {
+		t.Skipf("skipping live webhook delivery suite: %v", err)
+	}
+
+	item := harness.createSandboxItem(cfg, []string{"transactions"})
+	webhookUpdateResp := harness.mustRunJSON(
+		"item",
+		"webhook-update",
+		"--item", item.ItemID,
+		"--webhook-url", inbox.url,
+	)
+	if requireStringField(t, webhookUpdateResp, "request_id") == "" {
+		t.Fatal("item.webhook-update did not include request_id")
+	}
+
+	fireResp := harness.mustRunJSON(
+		"sandbox",
+		"item-fire-webhook",
+		"--item", item.ItemID,
+		"--webhook-type", "TRANSACTIONS",
+		"--webhook-code", "SYNC_UPDATES_AVAILABLE",
+	)
+	if requireStringField(t, fireResp, "request_id") == "" {
+		t.Fatal("sandbox item-fire-webhook did not include request_id")
+	}
+
+	request, payload := inbox.mustWaitForJSONRequest(t, 45*time.Second, func(body map[string]any) bool {
+		itemValue, ok := bodyValue(body, "item_id")
+		if !ok || itemValue != item.ItemID {
+			return false
+		}
+		webhookType, ok := bodyValue(body, "webhook_type")
+		if !ok || webhookType != "TRANSACTIONS" {
+			return false
+		}
+		webhookCode, ok := bodyValue(body, "webhook_code")
+		return ok && webhookCode == "SYNC_UPDATES_AVAILABLE"
+	})
+
+	if got := requireStringField(t, payload, "item_id"); got != item.ItemID {
+		t.Fatalf("captured webhook item_id = %q, want %q", got, item.ItemID)
+	}
+	if got := requireStringField(t, payload, "webhook_type"); got != "TRANSACTIONS" {
+		t.Fatalf("captured webhook webhook_type = %q, want TRANSACTIONS", got)
+	}
+
+	plaidVerification := request.headerValue("plaid-verification")
+	if plaidVerification == "" {
+		t.Fatal("captured webhook did not include plaid-verification header")
+	}
+
+	verifyResp := harness.mustRunJSON(
+		"webhook",
+		"verification-key",
+		"get",
+		"--plaid-verification", plaidVerification,
+	)
+	if requireStringField(t, verifyResp, "key", "kid") == "" {
+		t.Fatal("webhook verification-key.get did not include key.kid")
+	}
+}
+
+func TestLiveSandboxTransferSuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	harness := newLiveSandboxHarness(t)
+	cleanupClient := newLiveSandboxClient(t, cfg)
+	t.Cleanup(func() {
+		harness.cleanup(t, cleanupClient)
+	})
+
+	harness.initializeAppProfile(cfg)
+	item := harness.createSandboxItem(cfg, []string{"auth"})
+	accountID := harness.requireItemAccountID(item.ItemID)
+
+	capabilitiesResp, err := harness.runJSON("transfer", "capabilities", "get", "--item", item.ItemID, "--account-id", accountID)
+	if err != nil {
+		if isTransferUnavailableError(err) {
+			t.Skipf("skipping live Transfer suite: %v", err)
+		}
+		t.Fatal(err)
+	}
+	if requireStringField(t, capabilitiesResp, "request_id") == "" {
+		t.Fatal("transfer capabilities.get did not include request_id")
+	}
+
+	authorizationResp := harness.mustRunJSON(
+		"transfer",
+		"authorization",
+		"create",
+		"--item", item.ItemID,
+		"--account-id", accountID,
+		"--type", "debit",
+		"--network", "ach",
+		"--ach-class", "ppd",
+		"--amount", "1.00",
+		"--legal-name", "Plaid CLI Live Test",
+	)
+	authorizationID := requireStringField(t, authorizationResp, "authorization", "id")
+	if got := requireStringField(t, authorizationResp, "authorization", "decision"); got != "approved" {
+		t.Fatalf("transfer authorization.decision = %q, want approved", got)
+	}
+
+	createResp := harness.mustRunJSON(
+		"transfer",
+		"create",
+		"--item", item.ItemID,
+		"--account-id", accountID,
+		"--authorization-id", authorizationID,
+		"--amount", "1.00",
+		"--description", "live transfer",
+	)
+	transferID := requireStringField(t, createResp, "transfer", "id")
+
+	getResp := harness.mustRunJSON("transfer", "get", "--transfer-id", transferID)
+	if got := requireStringField(t, getResp, "transfer", "id"); got != transferID {
+		t.Fatalf("transfer.get transfer.id = %q, want %q", got, transferID)
+	}
+
+	listResp := harness.mustRunJSON("transfer", "list", "--count", "10")
+	if !arrayContainsMapField(requireArrayField(t, listResp, "transfers"), "id", transferID) {
+		t.Fatalf("transfer.list did not include transfer %q", transferID)
+	}
+
+	simulateResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"simulate",
+		"--transfer-id", transferID,
+		"--event-type", "posted",
+	)
+	if requireStringField(t, simulateResp, "request_id") == "" {
+		t.Fatal("sandbox transfer simulate did not include request_id")
+	}
+
+	foundPostedEvent := false
+	for attempt := 1; attempt <= 10; attempt++ {
+		eventListResp := harness.mustRunJSON("transfer", "event", "list", "--transfer-id", transferID, "--count", "25")
+		if arrayContainsMapFieldValue(requireArrayField(t, eventListResp, "transfer_events"), "event_type", "posted") {
+			foundPostedEvent = true
+			break
+		}
+		if attempt < 10 {
+			t.Logf("transfer event.list has not shown posted yet (attempt %d/10); retrying", attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !foundPostedEvent {
+		t.Fatal("transfer event.list did not include a posted event after sandbox transfer simulate")
+	}
+
+	eventSyncResp := harness.mustRunJSON("transfer", "event", "sync", "--after-id", "0", "--count", "25")
+	if !arrayContainsMapField(requireArrayField(t, eventSyncResp, "transfer_events"), "transfer_id", transferID) {
+		t.Fatalf("transfer event.sync did not include transfer %q", transferID)
 	}
 }
 
@@ -570,6 +837,39 @@ func marshalBodyArg(t *testing.T, body map[string]any) string {
 	return string(raw)
 }
 
+func newLiveWebhookInbox() (*liveWebhookInbox, error) {
+	client := &http.Client{Timeout: 20 * time.Second}
+	req, err := http.NewRequest(http.MethodPost, liveWebhookSiteTokenURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create webhook.site token request: %w", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("create webhook.site inbox: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return nil, fmt.Errorf("create webhook.site inbox: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+
+	var token webhookSiteTokenResponse
+	if err := json.NewDecoder(resp.Body).Decode(&token); err != nil {
+		return nil, fmt.Errorf("decode webhook.site token response: %w", err)
+	}
+	if strings.TrimSpace(token.UUID) == "" {
+		return nil, errors.New("webhook.site token response did not include uuid")
+	}
+
+	return &liveWebhookInbox{
+		client:  client,
+		tokenID: token.UUID,
+		url:     fmt.Sprintf("%s/%s", liveWebhookSiteBaseURL, token.UUID),
+	}, nil
+}
+
 func (h *liveSandboxHarness) initializeAppProfile(cfg liveSandboxConfig) {
 	h.t.Helper()
 
@@ -684,6 +984,22 @@ func (h *liveSandboxHarness) createSandboxItem(cfg liveSandboxConfig, products [
 	return item
 }
 
+func (h *liveSandboxHarness) requireItemAccountID(itemID string) string {
+	h.t.Helper()
+
+	record, err := state.New(h.stateDir).LoadItem(itemID)
+	if err != nil {
+		h.t.Fatalf("LoadItem(%q) error = %v", itemID, err)
+	}
+	if len(record.Accounts) == 0 {
+		h.t.Fatalf("saved item %q did not include any accounts", itemID)
+	}
+	if strings.TrimSpace(record.Accounts[0].AccountID) == "" {
+		h.t.Fatalf("saved item %q has an empty first account_id", itemID)
+	}
+	return record.Accounts[0].AccountID
+}
+
 func (h *liveSandboxHarness) mustRunJSON(args ...string) map[string]any {
 	h.t.Helper()
 
@@ -785,6 +1101,73 @@ func (h *liveSandboxHarness) cleanup(t *testing.T, client *plaid.Client) {
 	}
 }
 
+type liveWebhookInbox struct {
+	client  *http.Client
+	tokenID string
+	url     string
+}
+
+func (i *liveWebhookInbox) mustWaitForJSONRequest(t *testing.T, timeout time.Duration, match func(map[string]any) bool) (webhookSiteRequest, map[string]any) {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	for attempt := 1; time.Now().Before(deadline); attempt++ {
+		requests, err := i.listRequests()
+		if err == nil {
+			for _, request := range requests {
+				var payload map[string]any
+				if err := json.Unmarshal([]byte(request.Content), &payload); err != nil {
+					continue
+				}
+				if match == nil || match(payload) {
+					return request, payload
+				}
+			}
+		}
+
+		if attempt < 20 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	t.Fatalf("timed out waiting for webhook delivery to %s", i.url)
+	return webhookSiteRequest{}, nil
+}
+
+func (i *liveWebhookInbox) listRequests() ([]webhookSiteRequest, error) {
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/token/%s/requests?sorting=newest", liveWebhookSiteBaseURL, i.tokenID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("create webhook.site list request: %w", err)
+	}
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := i.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("list webhook.site requests: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return nil, fmt.Errorf("list webhook.site requests: status %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+	}
+
+	var payload webhookSiteRequestsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return nil, fmt.Errorf("decode webhook.site requests response: %w", err)
+	}
+	return payload.Data, nil
+}
+
+func (r webhookSiteRequest) headerValue(name string) string {
+	for key, values := range r.Headers {
+		if strings.EqualFold(key, name) && len(values) > 0 {
+			return values[0]
+		}
+	}
+	return ""
+}
+
 func newLiveSandboxClient(t *testing.T, cfg liveSandboxConfig) *plaid.Client {
 	t.Helper()
 
@@ -825,6 +1208,52 @@ func requireArrayField(t *testing.T, body map[string]any, path ...string) []any 
 		t.Fatalf("response field %s = %#v, want array", strings.Join(path, "."), value)
 	}
 	return valueArray
+}
+
+func arrayContainsMapField(values []any, field, want string) bool {
+	for _, raw := range values {
+		entry, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		got, ok := entry[field].(string)
+		if ok && got == want {
+			return true
+		}
+	}
+	return false
+}
+
+func arrayContainsMapFieldValue(values []any, field, want string) bool {
+	return arrayContainsMapField(values, field, want)
+}
+
+func isTransferUnavailableError(err error) bool {
+	var apiErr *plaid.APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+
+	switch apiErr.ErrorCode {
+	case "PRODUCT_NOT_ENABLED", "PRODUCTS_NOT_SUPPORTED", "INVALID_PRODUCT", "UNAUTHORIZED_ROUTE_ACCESS":
+		return true
+	}
+
+	message := strings.ToLower(strings.TrimSpace(strings.Join([]string{
+		apiErr.ErrorType,
+		apiErr.ErrorCode,
+		apiErr.ErrorMessage,
+		apiErr.DisplayMessage,
+	}, " ")))
+	if !strings.Contains(message, "transfer") {
+		return false
+	}
+	return strings.Contains(message, "not enabled") ||
+		strings.Contains(message, "not supported") ||
+		strings.Contains(message, "not available") ||
+		strings.Contains(message, "not configured") ||
+		strings.Contains(message, "request access") ||
+		strings.Contains(message, "product")
 }
 
 func envTruthy(value string) bool {

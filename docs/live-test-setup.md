@@ -33,15 +33,21 @@ This covers the core headless sandbox flow, plus:
 
 - user-linked `sandbox user-reset-login`
 - dynamic `sandbox transactions-create`
+- `transactions refresh`
 - `sandbox processor-token-create`
+- processor `account/auth/balance/identity/transactions/*` reads
+- webhook delivery plus `webhook verification-key get`
 - `payment-initiation recipient create`
 - `payment-initiation payment create`
 - `sandbox payment-simulate`
+- Transfer capabilities, authorization, create/get/list, sandbox simulate, and event reads when Transfer is enabled
 
 Notes:
 
 - `sandbox processor-token-create` returns only a `processor_token`, so the Item it creates cannot be cleaned up through this CLI.
+- Webhook delivery coverage uses a disposable `webhook.site` inbox. If `webhook.site` is unavailable, that one test skips and the rest of `just test-live` still runs.
 - The Payment Initiation path runs as part of `just test-live`. On this sandbox account it worked without extra env vars. If it fails on another account with a product-access error, enable or request `Payment Initiation` under `Team Settings -> Products`.
+- The Transfer path runs as part of `just test-live` and self-skips when the app lacks Transfer access. If you want that coverage, enable or request `Transfer` under `Team Settings -> Products`.
 
 ## Income Suite
 
