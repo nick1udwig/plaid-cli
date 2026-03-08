@@ -362,6 +362,61 @@ func TestApplyStringFlag(t *testing.T) {
 	})
 }
 
+func TestApplyDecimalStringFlag(t *testing.T) {
+	t.Parallel()
+
+	t.Run("parses decimal value from changed flag", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("amount", "", "")
+		if err := cmd.Flags().Set("amount", "102.05"); err != nil {
+			t.Fatalf("Set() error = %v", err)
+		}
+
+		body := map[string]any{}
+		if err := applyDecimalStringFlag(cmd, body, "amount", "102.05", "amount"); err != nil {
+			t.Fatalf("applyDecimalStringFlag() error = %v", err)
+		}
+		if got, _ := bodyValue(body, "amount"); got != 102.05 {
+			t.Fatalf("body[amount] = %#v, want %v", got, 102.05)
+		}
+	})
+
+	t.Run("preserves existing numeric body value when flag is not changed", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("amount", "", "")
+
+		body := map[string]any{"amount": 55.5}
+		if err := applyDecimalStringFlag(cmd, body, "amount", "", "amount"); err != nil {
+			t.Fatalf("applyDecimalStringFlag() error = %v", err)
+		}
+		if got, _ := bodyValue(body, "amount"); got != 55.5 {
+			t.Fatalf("body[amount] = %#v, want %v", got, 55.5)
+		}
+	})
+
+	t.Run("rejects invalid decimal values", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("amount", "", "")
+		if err := cmd.Flags().Set("amount", "abc"); err != nil {
+			t.Fatalf("Set() error = %v", err)
+		}
+
+		err := applyDecimalStringFlag(cmd, map[string]any{}, "amount", "abc", "amount")
+		if err == nil {
+			t.Fatal("applyDecimalStringFlag() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "--amount") {
+			t.Fatalf("error = %q, want flag name", err)
+		}
+	})
+}
+
 func TestPopulateTransferAccess(t *testing.T) {
 	t.Parallel()
 
@@ -392,6 +447,52 @@ func TestPopulateTransferAccess(t *testing.T) {
 		}
 		if got, ok := bodyValue(body, "account_id"); !ok || got != "acct-transfer" {
 			t.Fatalf("body account_id = %#v, %v; want %q, true", got, ok, "acct-transfer")
+		}
+	})
+}
+
+func TestRequireExactlyOneBodyField(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string][]string{
+		"--user-id":    {"user_id"},
+		"--user-token": {"user_token"},
+	}
+
+	t.Run("accepts exactly one field", func(t *testing.T) {
+		t.Parallel()
+
+		body := map[string]any{"user_id": "usr_123"}
+		if err := requireExactlyOneBodyField(body, fields); err != nil {
+			t.Fatalf("requireExactlyOneBodyField() error = %v", err)
+		}
+	})
+
+	t.Run("rejects zero fields", func(t *testing.T) {
+		t.Parallel()
+
+		err := requireExactlyOneBodyField(map[string]any{}, fields)
+		if err == nil {
+			t.Fatal("requireExactlyOneBodyField() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "--user-id") || !strings.Contains(err.Error(), "--user-token") {
+			t.Fatalf("error = %q, want both field labels", err)
+		}
+	})
+
+	t.Run("rejects multiple fields", func(t *testing.T) {
+		t.Parallel()
+
+		body := map[string]any{
+			"user_id":    "usr_123",
+			"user_token": "user-token-123",
+		}
+		err := requireExactlyOneBodyField(body, fields)
+		if err == nil {
+			t.Fatal("requireExactlyOneBodyField() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "--user-id") || !strings.Contains(err.Error(), "--user-token") {
+			t.Fatalf("error = %q, want both field labels", err)
 		}
 	})
 }

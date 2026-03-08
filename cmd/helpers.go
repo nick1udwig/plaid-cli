@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -260,6 +262,20 @@ func applyStringFlag(cmd *cobra.Command, body map[string]any, flagName, value st
 	return setBodyValue(body, value, path...)
 }
 
+func applyDecimalStringFlag(cmd *cobra.Command, body map[string]any, flagName, value string, path ...string) error {
+	if !cmd.Flags().Changed(flagName) {
+		if strings.TrimSpace(value) == "" || bodyHasValue(body, path...) {
+			return nil
+		}
+	}
+
+	parsed, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+	if err != nil {
+		return fmt.Errorf("parse --%s: %w", flagName, err)
+	}
+	return setBodyValue(body, parsed, path...)
+}
+
 func applyIntFlag(cmd *cobra.Command, body map[string]any, flagName string, value int, path ...string) error {
 	if !cmd.Flags().Changed(flagName) && bodyHasValue(body, path...) {
 		return nil
@@ -302,4 +318,22 @@ func stringMapToAny(value map[string]string) map[string]any {
 		out[key] = item
 	}
 	return out
+}
+
+func requireExactlyOneBodyField(body map[string]any, fields map[string][]string) error {
+	count := 0
+	labels := make([]string, 0, len(fields))
+	for label, path := range fields {
+		labels = append(labels, label)
+		if bodyHasValue(body, path...) {
+			count++
+		}
+	}
+
+	if count == 1 {
+		return nil
+	}
+
+	sort.Strings(labels)
+	return fmt.Errorf("provide exactly one of %s", strings.Join(labels, ", "))
 }

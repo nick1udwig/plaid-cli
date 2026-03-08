@@ -4,11 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"plaid-cli/internal/plaid"
-	"plaid-cli/internal/state"
 
 	"github.com/spf13/cobra"
 )
@@ -139,36 +137,8 @@ func newLinkConnectCmd(opts *Options) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
-			itemResp, err := client.GetItem(ctx, exchangeResp.AccessToken)
+			record, err := saveItemFromAccessToken(ctx, cmd, store, client, exchangeResp.AccessToken, linkResp.LinkToken, products, countryCodes)
 			if err != nil {
-				return err
-			}
-
-			accountsResp, err := client.GetAccounts(ctx, exchangeResp.AccessToken)
-			if err != nil {
-				return err
-			}
-
-			institutionName := ""
-			if strings.TrimSpace(itemResp.Item.InstitutionID) != "" {
-				institutionName, err = client.GetInstitutionName(ctx, itemResp.Item.InstitutionID, countryCodes)
-				if err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "Warning: could not resolve institution name: %v\n", err)
-				}
-			}
-
-			record := state.ItemRecord{
-				ItemID:          exchangeResp.ItemID,
-				AccessToken:     exchangeResp.AccessToken,
-				InstitutionID:   itemResp.Item.InstitutionID,
-				InstitutionName: institutionName,
-				LinkToken:       linkResp.LinkToken,
-				Products:        products,
-				Accounts:        state.AccountSummariesFromPlaid(accountsResp.Accounts),
-			}
-
-			if err := store.SaveItem(record); err != nil {
 				return err
 			}
 

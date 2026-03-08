@@ -35,6 +35,33 @@ plaid transfer create \
   --body @transfer.json
 ```
 
+Create a raw Link token for an agent-managed Link flow:
+
+```bash
+plaid link token-create \
+  --product auth \
+  --product identity \
+  --client-user-id local-owner
+```
+
+Exchange a Link public token and save the resulting Item locally:
+
+```bash
+plaid item public-token-exchange \
+  --public-token YOUR_PUBLIC_TOKEN \
+  --product auth
+```
+
+Evaluate ACH return risk with Signal:
+
+```bash
+plaid signal evaluate \
+  --item YOUR_ITEM_ID \
+  --account-id YOUR_ACCOUNT_ID \
+  --client-transaction-id txn_123 \
+  --amount 102.05
+```
+
 ## Local Docs Snapshot
 
 Plaid's docs are mirrored under [docs/plaid/](docs/plaid/) for implementation reference.

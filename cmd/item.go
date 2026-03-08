@@ -16,6 +16,7 @@ func newItemCmd(_ *Options) *cobra.Command {
 	cmd.AddCommand(newItemListCmd())
 	cmd.AddCommand(newItemGetCmd())
 	cmd.AddCommand(newItemRemoveCmd())
+	cmd.AddCommand(newItemPublicTokenExchangeCmd())
 	cmd.AddCommand(newItemInvalidateAccessTokenCmd())
 	cmd.AddCommand(newItemWebhookUpdateCmd())
 
@@ -140,6 +141,71 @@ func newItemRemoveCmd() *cobra.Command {
 	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to remove")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
+	return cmd
+}
+
+func newItemPublicTokenExchangeCmd() *cobra.Command {
+	var publicToken, linkToken string
+	var products []string
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
+
+	cmd := &cobra.Command{
+		Use:   "public-token-exchange",
+		Short: "Exchange a Link public token for an access token",
+		Long:  "Capability: write. Calls /item/public_token/exchange and saves the resulting Item locally under ~/.plaid-cli/items.",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			template := map[string]any{
+				"public_token": "<public-token>",
+			}
+			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/items/index.md", template); handled || err != nil {
+				return err
+			}
+
+			store, profile, client, err := loadClientFromState(cmd)
+			if err != nil {
+				return err
+			}
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "public-token", publicToken, "public_token"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--public-token": {"public_token"},
+			}); err != nil {
+				return err
+			}
+
+			ctx, cancel := commandContext()
+			defer cancel()
+			resp, err := client.Call(ctx, "/item/public_token/exchange", body)
+			if err != nil {
+				return err
+			}
+
+			accessTokenValue, _ := resp["access_token"].(string)
+			if accessTokenValue == "" {
+				return errors.New("Plaid response did not include access_token")
+			}
+
+			record, err := saveItemFromAccessToken(ctx, cmd, store, client, accessTokenValue, linkToken, products, defaultCountryCodes(profile, nil))
+			if err != nil {
+				return err
+			}
+
+			resp["saved_item_record"] = store.ItemPath(record.ItemID)
+			return writeJSON(cmd, resp)
+		},
+	}
+
+	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
+	cmd.Flags().StringVar(&publicToken, "public-token", "", "Plaid public_token returned from Link or Sandbox")
+	cmd.Flags().StringVar(&linkToken, "link-token", "", "Optional link_token to save alongside the Item metadata")
+	cmd.Flags().StringSliceVar(&products, "product", nil, "Optional product metadata to save with the local Item record (repeatable)")
 	return cmd
 }
 
