@@ -117,6 +117,15 @@ Each command should declare a required capability set in its help text and gener
   - `get`, `list`, `search`, `sync`, `download`, `status`, `introspect`
 - `write`
   - `create`, `update`, `remove`, `cancel`, `revoke`, `invalidate`, `execute`, `submit`, `retry`, `prepare`, `verify`, `exchange`, `refresh`, `report`
+- `move-money`
+  - additive capability for live commands that initiate, execute, reverse, refund, cancel, or otherwise directly control movement of funds or balances
+  - this should be applied alongside `write`, not instead of it
+  - likely includes:
+    - Plaid Transfer money movement commands such as `transfer authorization create`, `transfer create`, `transfer cancel`, `transfer refund create`, `transfer sweep create`, `transfer recurring create`, `transfer recurring cancel`, `transfer intent create`
+    - Plaid Ledger balance-changing commands such as `transfer ledger deposit`, `transfer ledger distribute`, `transfer ledger withdraw`
+    - Payment Initiation commands that create, execute, revoke, or reverse payment authority such as `payment-initiation consent create`, `payment-initiation consent revoke`, `payment-initiation consent execute`, `payment-initiation payment create`, `payment-initiation payment reverse`
+    - virtual account payout execution such as `wallet transaction execute`
+  - does not include adjacent setup or analysis commands such as `link token-create`, `signal evaluate`, `transfer capabilities get`, `wallet create`, or read-only transfer/payment inspection commands
 - `sandbox`
   - any `/sandbox/*` endpoint
 - `admin`
@@ -128,7 +137,9 @@ Examples:
 - `balance get` -> `read`
 - `item remove` -> `write`
 - `link token-create` -> `write`
-- `transfer create` -> `write`
+- `transfer create` -> `write`, `move-money`
+- `payment-initiation payment create` -> `write`, `move-money`
+- `wallet transaction execute` -> `write`, `move-money`
 - `sandbox transfer-simulate` -> `sandbox`
 - `oauth token` -> `admin`
 
