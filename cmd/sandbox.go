@@ -15,6 +15,7 @@ func newSandboxCmd() *cobra.Command {
 	cmd.AddCommand(newSandboxPublicTokenCreateCmd())
 	cmd.AddCommand(newSandboxItemResetLoginCmd())
 	cmd.AddCommand(newSandboxItemFireWebhookCmd())
+	cmd.AddCommand(newSandboxTransferCmd())
 	return cmd
 }
 
