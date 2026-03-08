@@ -31,17 +31,7 @@ You can also provide multiple comma-separated values to create a token that will
 /oauth/token/ request
 
 ```
-curl 'https://sandbox.plaid.com/oauth/token' \
---header 'Content-Type: application/json' \
---data '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange",
-  "scope": "user:read",
-  "subject_token_type":"urn:plaid:params:credit:multi-user",
-  "audience": "urn:plaid:params:cra-partner:fannie-mae",
-  "subject_token": "usr_9nSp2KuZ2x4JDw"
-}'
+curl 'https://sandbox.plaid.com/oauth/token' --header 'Content-Type: application/json' --data '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "grant_type": "urn:ietf:params:oauth:grant-type:token-exchange", "scope": "user:read", "subject_token_type":"urn:plaid:params:credit:multi-user", "audience": "urn:plaid:params:cra-partner:fannie-mae", "subject_token": "usr_9nSp2KuZ2x4JDw" }'
 ```
 
 /oauth/token response
@@ -65,13 +55,7 @@ To revoke your token, call [`/oauth/revoke`](/docs/api/oauth/#oauthrevoke), pass
 /oauth/revoke request
 
 ```
-curl -X POST https://sandbox.plaid.com/oauth/revoke \
--H 'Content-Type: application/json' \
--d '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "token": "pda-RDdg0TUCB0FB25_UPIlnhA=="
-}'
+curl -X POST https://sandbox.plaid.com/oauth/revoke -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "token": "pda-RDdg0TUCB0FB25_UPIlnhA==" }'
 ```
 
 /oauth/revoke response

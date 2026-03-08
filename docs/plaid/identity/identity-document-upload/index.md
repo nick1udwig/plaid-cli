@@ -28,26 +28,7 @@ To use Document Upload, you will first create the Item with another product such
 Example /link/token/create call for Identity Document Upload
 
 ```
-curl -X POST https://sandbox.plaid.com/link/token/create \
--H 'Content-Type: application/json' \
--d '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "client_name": "Insert Client name here",
-  "products": ["identity"],
-  "access_token": "Insert access token here",
-  "identity": 
-    {
-      "is_document_upload": true, 
-      "account_ids": ["ZXEbW7Rkr9iv1qj8abebU1KDJlkexgSgrLAod"], 
-      "parsing_configs": ["ocr", "risk_signals"]
-    },
-  "country_codes": ["US"],
-  "language": "en",
-  "user": {
-    "client_user_id": "unique_user_id"
-  }
-}'
+curl -X POST https://sandbox.plaid.com/link/token/create -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "client_name": "Insert Client name here", "products": ["identity"], "access_token": "Insert access token here", "identity": { "is_document_upload": true, "account_ids": ["ZXEbW7Rkr9iv1qj8abebU1KDJlkexgSgrLAod"], "parsing_configs": ["ocr", "risk_signals"] }, "country_codes": ["US"], "language": "en", "user": { "client_user_id": "unique_user_id" } }'
 ```
 
 During update mode, the end user will be prompted to upload a bank statement. After the statement has been uploaded and processed, Plaid will send an `IDENTITY: DOCUMENT_UPDATE_AVAILABLE` webhook. A `"document_status": "OCR_PROCESSING_COMPLETE"` field in the webhook body indicates that the statement was successfully parsed.

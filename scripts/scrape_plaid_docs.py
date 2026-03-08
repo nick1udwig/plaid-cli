@@ -159,6 +159,7 @@ def html_to_markdown(html: str, source_url: str) -> str:
         strip=["span"],
     ).strip()
     content = MULTIBLANK_RE.sub("\n\n", content)
+    content = collapse_continued_code_blocks(content)
 
     scraped_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     return (
@@ -169,6 +170,57 @@ def html_to_markdown(html: str, source_url: str) -> str:
         "---\n\n"
         f"{content}\n"
     )
+
+
+def collapse_continued_code_blocks(markdown: str) -> str:
+    lines = markdown.splitlines()
+    out: list[str] = []
+    fence_lines: list[str] = []
+    fence_header = ""
+    in_fence = False
+
+    for line in lines:
+        if not in_fence:
+            if line.startswith("```"):
+                in_fence = True
+                fence_header = line
+                fence_lines = []
+                continue
+            out.append(line)
+            continue
+
+        if line.startswith("```"):
+            out.append(fence_header)
+            out.extend(normalize_code_block(fence_lines))
+            out.append(line)
+            in_fence = False
+            continue
+
+        fence_lines.append(line)
+
+    if in_fence:
+        out.append(fence_header)
+        out.extend(normalize_code_block(fence_lines))
+
+    result = "\n".join(out)
+    if markdown.endswith("\n"):
+        result += "\n"
+    return result
+
+
+def normalize_code_block(lines: list[str]) -> list[str]:
+    if not any(line.rstrip().endswith("\\") for line in lines):
+        return lines
+
+    collapsed = " ".join(
+        part
+        for part in (
+            line.rstrip()[:-1].strip() if line.rstrip().endswith("\\") else line.strip()
+            for line in lines
+        )
+        if part
+    )
+    return [collapsed]
 
 
 def ensure_output_root() -> None:

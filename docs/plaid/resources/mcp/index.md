@@ -31,14 +31,7 @@ In order to connect to the Dashboard MCP server, you must first create an OAuth 
 Creating an Access Token
 
 ```
-curl -X POST https://production.plaid.com/oauth/token \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "client_id": "${PLAID_CLIENT_ID}",
-    "client_secret": "YOUR_PRODUCTION_SECRET",
-    "grant_type": "client_credentials", 
-    "scope": "mcp:dashboard"
-  }'
+curl -X POST https://production.plaid.com/oauth/token -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "client_secret": "YOUR_PRODUCTION_SECRET", "grant_type": "client_credentials", "scope": "mcp:dashboard" }'
 ```
 
 This will return an `access_token` you can use to authenticate into the Dashboard MCP server. This will also return a `refresh_token` that you can use to request a new access token when the old one expires.
@@ -175,14 +168,7 @@ Access tokens for the MCP server expire after 15 minutes. If the `access_token` 
 Refreshing an Access Token
 
 ```
-curl -X POST https://production.plaid.com/oauth/token \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "client_id": "${PLAID_CLIENT_ID}",
-    "secret": "YOUR_PRODUCTION_SECRET",
-    "refresh_token": "YOUR_REFRESH_TOKEN",
-    "grant_type": "refresh_token"
-  }'
+curl -X POST https://production.plaid.com/oauth/token -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "YOUR_PRODUCTION_SECRET", "refresh_token": "YOUR_REFRESH_TOKEN", "grant_type": "refresh_token" }'
 ```
 
 Please note that if your `access_token` has expired, different client libraries will surface that information in different ways. In OpenAI's Python library, for instance, this is raised as a `openai.APIStatusError`:

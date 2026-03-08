@@ -18,11 +18,7 @@ Plaid provisions these values through the Dashboard, not through a CLI bootstrap
 Initialize the CLI with your Plaid app credentials:
 
 ```bash
-plaid init \
-  --env production \
-  --client-id YOUR_CLIENT_ID \
-  --secret YOUR_SECRET \
-  --client-name "Plaid CLI"
+plaid init --env production --client-id YOUR_CLIENT_ID --secret YOUR_SECRET --client-name "Plaid CLI"
 ```
 
 This stores persistent state under `~/.plaid-cli`.
@@ -32,9 +28,7 @@ This stores persistent state under `~/.plaid-cli`.
 Open a Hosted Link session in the browser and save the resulting Item locally:
 
 ```bash
-plaid link connect \
-  --product auth \
-  --product transactions
+plaid link connect --product auth --product transactions
 ```
 
 The CLI will:

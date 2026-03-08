@@ -58,28 +58,7 @@ In a Hosted Link session, you should also store the `link_token` value that gets
 Sample /link/token/create request for Hosted Link
 
 ```
-curl -X POST https://production.plaid.com/link/token/create \
--H 'Content-Type: application/json' \
--d '{
-    "client_id": "${PLAID_CLIENT_ID}",
-    "secret": "${PLAID_SECRET}",
-    "client_name": "Wonderwallet",
-    "country_codes": ["US"],
-    "redirect_uri": "{{UNIVERSAL_OR_APP_LINK}}",
-    "webhook": "https://wonderwallet.com/webhook_receiver",
-    "language": "en",
-    "user": {
-      "client_user_id": "a57d3304",
-      "phone_number": "+19162255887"
-    },
-  "products": ["auth"],
-  "hosted_link": {
-    "delivery_method": "sms",
-    "completion_redirect_uri": "https://wonderwallet.com/redirect",
-    "is_mobile_app": false,
-    "url_lifetime_seconds": 900
-  }
-}
+curl -X POST https://production.plaid.com/link/token/create -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "client_name": "Wonderwallet", "country_codes": ["US"], "redirect_uri": "{{UNIVERSAL_OR_APP_LINK}}", "webhook": "https://wonderwallet.com/webhook_receiver", "language": "en", "user": { "client_user_id": "a57d3304", "phone_number": "+19162255887" }, "products": ["auth"], "hosted_link": { "delivery_method": "sms", "completion_redirect_uri": "https://wonderwallet.com/redirect", "is_mobile_app": false, "url_lifetime_seconds": 900 } }
 ```
 
 Sample /link/token/create response
@@ -301,16 +280,7 @@ Call [`/link/token/create`](/docs/api/link/#linktokencreate) with the following 
 Sample /link/token/create request for mobile apps
 
 ```
-curl -X POST https://production.plaid.com/link/token/create \
--H 'Content-Type: application/json' \
--d '{
-     ...Other data removed...
-      hosted_link: {
-        completion_redirect_uri: "wonderwallet://hosted-link-complete",
-        is_mobile_app: true
-      },
-      redirect_uri: "https://mysite.com/universal-link/jump-to-my-app.html",
-}'
+curl -X POST https://production.plaid.com/link/token/create -H 'Content-Type: application/json' -d '{ ...Other data removed... hosted_link: { completion_redirect_uri: "wonderwallet://hosted-link-complete", is_mobile_app: true }, redirect_uri: "https://mysite.com/universal-link/jump-to-my-app.html", }'
 ```
 
 ##### "Register" your custom URL scheme

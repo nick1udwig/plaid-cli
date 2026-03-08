@@ -155,21 +155,7 @@ This update mode flow can also be used to remove accounts from an Item. We recom
 Example /link/token/create call to request new accounts in update mode
 
 ```
-curl -X POST https://sandbox.plaid.com/link/token/create \
--H 'Content-Type: application/json' \
--d '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "client_name": "My App",
-  "user": { "client_user_id": "${UNIQUE_USER_ID}" },
-  "country_codes": ["US"],
-  "language": "en",
-  "webhook": "https://webhook.sample.com",
-  "access_token": "${ACCESS_TOKEN}",
-  "link_customization_name": "account_selection_v2_customization",
-  "redirect_uri": "https://www.sample.com/redirect.html",
-  "update": { "account_selection_enabled": true }
-}'
+curl -X POST https://sandbox.plaid.com/link/token/create -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "client_name": "My App", "user": { "client_user_id": "${UNIQUE_USER_ID}" }, "country_codes": ["US"], "language": "en", "webhook": "https://webhook.sample.com", "access_token": "${ACCESS_TOKEN}", "link_customization_name": "account_selection_v2_customization", "redirect_uri": "https://www.sample.com/redirect.html", "update": { "account_selection_enabled": true } }'
 ```
 
 When using the Assets product specifically, if a user selects additional accounts during update mode but does not successfully complete the Link flow, Assets authorization will be revoked from the Item. If this occurs, have the user go through a new Link flow in order to generate an Asset Report, or, if you have Data Transparency Messaging enabled, use update mode to re-authorize the Item for assets, as described in the next section.

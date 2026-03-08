@@ -79,18 +79,7 @@ Link token creation is the only step requires changes when requesting both Auth 
 Create link token
 
 ```
-curl -X POST https://sandbox.plaid.com/link/token/create \
--H 'Content-Type: application/json' \
--d '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "client_name": "Plaid Test App",
-  "user": { "client_user_id": "${UNIQUE_USER_ID}" },
-  "products": ["auth", "identity"], // using both products
-  "country_codes": ["GB", "NL", "DE"],
-  "language": "en",
-  "webhook": "https://webhook.sample.com",
-}'
+curl -X POST https://sandbox.plaid.com/link/token/create -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "client_name": "Plaid Test App", "user": { "client_user_id": "${UNIQUE_USER_ID}" }, "products": ["auth", "identity"], // using both products "country_codes": ["GB", "NL", "DE"], "language": "en", "webhook": "https://webhook.sample.com", }'
 ```
 
 #### End user experience
@@ -115,20 +104,7 @@ By default, Plaid will ask the user to manually select their financial instituti
 Create link token with institution preselected
 
 ```
-curl -X POST https://sandbox.plaid.com/link/token/create \
--H 'Content-Type: application/json' \
--d '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "client_name": "Plaid Test App",
-  "user": { "client_user_id": "${UNIQUE_USER_ID}" },
-  "products": ["payment_initiation"],
-  "country_codes": ["GB", "NL", "DE"],
-  "language": "en",
-  "webhook": "https://webhook.sample.com",
-  "payment_initiation": { "payment_id": "${PAYMENT_ID}" },
-  "institution_id": "${INSTITUTION_ID}" // preselect institution_id
-}'
+curl -X POST https://sandbox.plaid.com/link/token/create -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "client_name": "Plaid Test App", "user": { "client_user_id": "${UNIQUE_USER_ID}" }, "products": ["payment_initiation"], "country_codes": ["GB", "NL", "DE"], "language": "en", "webhook": "https://webhook.sample.com", "payment_initiation": { "payment_id": "${PAYMENT_ID}" }, "institution_id": "${INSTITUTION_ID}" // preselect institution_id }'
 ```
 
 #### Compliant account funding
@@ -146,24 +122,7 @@ Not all financial institutions support this feature. In the UK there is full sup
 Create payment request
 
 ```
-curl -X POST https://sandbox.plaid.com/payment_initiation/payment/create \
--H 'Content-Type: application/json' \
--d '{
-  "client_id": "${PLAID_CLIENT_ID}",
-  "secret": "${PLAID_SECRET}",
-  "recipient_id": "${RECIPIENT_ID}",
-  "reference": "Sample reference",
-  "amount": {
-    "currency": "GBP",
-    "amount": 1.99
-  },
-  "options": { // additional payee account restriction
-    "bacs": {
-        "account": "26207729",
-        "sort_code": "560029"
-    }
-  }
-}'
+curl -X POST https://sandbox.plaid.com/payment_initiation/payment/create -H 'Content-Type: application/json' -d '{ "client_id": "${PLAID_CLIENT_ID}", "secret": "${PLAID_SECRET}", "recipient_id": "${RECIPIENT_ID}", "reference": "Sample reference", "amount": { "currency": "GBP", "amount": 1.99 }, "options": { // additional payee account restriction "bacs": { "account": "26207729", "sort_code": "560029" } } }'
 ```
 
 #### Compliant withdrawals
