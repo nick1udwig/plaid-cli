@@ -13,6 +13,7 @@ func newIdentityCmd() *cobra.Command {
 		Long:  "Read-only identity commands.",
 	}
 	cmd.AddCommand(newIdentityGetCmd())
+	cmd.AddCommand(newIdentityDocumentsUploadsGetCmd())
 	cmd.AddCommand(newIdentityMatchCmd())
 	return cmd
 }
@@ -130,5 +131,57 @@ func newIdentityMatchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&legalName, "legal-name", "", "Legal name to match against bank identity")
 	cmd.Flags().StringVar(&emailAddress, "email-address", "", "Email address to match against bank identity")
 	cmd.Flags().StringVar(&phoneNumber, "phone-number", "", "Phone number to match against bank identity")
+	return cmd
+}
+
+func newIdentityDocumentsUploadsGetCmd() *cobra.Command {
+	var itemID, accessToken string
+	var accountIDs []string
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
+
+	cmd := &cobra.Command{
+		Use:   "documents-uploads-get",
+		Short: "Call /identity/documents/uploads/get",
+		Long:  "Capability: read. Retrieves identity data parsed from uploaded documents.",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			template := map[string]any{"access_token": "<access-token>"}
+			if len(accountIDs) > 0 {
+				template["options"] = map[string]any{"account_ids": accountIDs}
+			}
+			if handled, err := maybeWriteInfo(cmd, info, "docs/plaid/api/products/identity/index.md", template); handled || err != nil {
+				return err
+			}
+
+			store, _, client, err := loadClientFromState(cmd)
+			if err != nil {
+				return err
+			}
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
+				return err
+			}
+			if err := applyStringSliceFlag(cmd, body, "account-id", accountIDs, "options", "account_ids"); err != nil {
+				return err
+			}
+
+			ctx, cancel := commandContext()
+			defer cancel()
+			resp, err := client.Call(ctx, "/identity/documents/uploads/get", body)
+			if err != nil {
+				return err
+			}
+			return writeJSON(cmd, resp)
+		},
+	}
+
+	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
+	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
+	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
+	cmd.Flags().StringSliceVar(&accountIDs, "account-id", nil, "Account ID to filter by (repeatable)")
 	return cmd
 }

@@ -7,18 +7,28 @@ import (
 )
 
 const processorDocPath = "docs/plaid/api/processors/index.md"
+const processorPartnersDocPath = "docs/plaid/api/processor-partners/index.md"
 
 func newProcessorCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "processor",
 		Short: "Processor token commands",
-		Long:  "Commands for creating processor tokens and managing processor token permissions.",
+		Long:  "Commands for creating processor tokens, managing token permissions, and calling processor partner endpoints.",
 	}
 
+	cmd.AddCommand(newProcessorAccountCmd())
+	cmd.AddCommand(newProcessorAuthCmd())
+	cmd.AddCommand(newProcessorBalanceCmd())
+	cmd.AddCommand(newProcessorIdentityCmd())
+	cmd.AddCommand(newProcessorLiabilitiesCmd())
+	cmd.AddCommand(newProcessorInvestmentsCmd())
+	cmd.AddCommand(newProcessorSignalCmd())
 	cmd.AddCommand(newProcessorTokenCreateCmd())
+	cmd.AddCommand(newProcessorTokenWebhookUpdateCmd())
 	cmd.AddCommand(newProcessorStripeBankAccountTokenCreateCmd())
 	cmd.AddCommand(newProcessorTokenPermissionsGetCmd())
 	cmd.AddCommand(newProcessorTokenPermissionsSetCmd())
+	cmd.AddCommand(newProcessorTransactionsCmd())
 
 	return cmd
 }
@@ -246,5 +256,61 @@ func newProcessorTokenPermissionsSetCmd() *cobra.Command {
 	cmd.Flags().StringVar(&processorToken, "processor-token", "", "Plaid processor_token")
 	cmd.Flags().StringSliceVar(&products, "product", nil, "Product the processor token should have access to (repeatable)")
 	cmd.Flags().BoolVar(&allowAll, "allow-all", false, "Set an empty products list, restoring access to all available products")
+	return cmd
+}
+
+func newProcessorTokenWebhookUpdateCmd() *cobra.Command {
+	var processorToken, webhook string
+	var info *commandInfoFlags
+	var bodyFlags *requestBodyFlags
+
+	cmd := &cobra.Command{
+		Use:   "token-webhook-update",
+		Short: "Call /processor/token/webhook/update",
+		Long:  "Capability: admin. Updates the webhook URL associated with a processor token.",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			template := map[string]any{
+				"processor_token": "<processor-token>",
+				"webhook":         "https://example.com/plaid/processor",
+			}
+			if handled, err := maybeWriteInfo(cmd, info, processorPartnersDocPath, template); handled || err != nil {
+				return err
+			}
+
+			_, _, client, err := loadClientFromState(cmd)
+			if err != nil {
+				return err
+			}
+			body, err := loadRequestBody(bodyFlags.body)
+			if err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "processor-token", processorToken, "processor_token"); err != nil {
+				return err
+			}
+			if err := applyStringFlag(cmd, body, "webhook", webhook, "webhook"); err != nil {
+				return err
+			}
+			if err := requireBodyFields(body, map[string][]string{
+				"--processor-token": {"processor_token"},
+				"--webhook":         {"webhook"},
+			}); err != nil {
+				return err
+			}
+
+			ctx, cancel := commandContext()
+			defer cancel()
+			resp, err := client.Call(ctx, "/processor/token/webhook/update", body)
+			if err != nil {
+				return err
+			}
+			return writeJSON(cmd, resp)
+		},
+	}
+
+	info = bindInfoFlags(cmd)
+	bodyFlags = bindBodyFlag(cmd)
+	cmd.Flags().StringVar(&processorToken, "processor-token", "", "Plaid processor_token")
+	cmd.Flags().StringVar(&webhook, "webhook", "", "Webhook URL to associate with the processor token")
 	return cmd
 }
