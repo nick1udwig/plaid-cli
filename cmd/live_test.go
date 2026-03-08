@@ -16,21 +16,19 @@ import (
 )
 
 const (
-	liveTestGateEnv                  = "PLAID_RUN_LIVE_TESTS"
-	liveProcessorTestGateEnv         = "PLAID_RUN_LIVE_PROCESSOR_TESTS"
-	livePaymentInitiationTestGateEnv = "PLAID_RUN_LIVE_PAYMENT_INITIATION_TESTS"
-	liveIncomeTestGateEnv            = "PLAID_RUN_LIVE_INCOME_TESTS"
-	liveCheckTestGateEnv             = "PLAID_RUN_LIVE_CHECK_TESTS"
-	liveSandboxClientIDEnv           = "PLAID_SANDBOX_CLIENT_ID"
-	liveSandboxSecretEnv             = "PLAID_SANDBOX_SECRET"
-	liveFallbackClientIDEnv          = "PLAID_CLIENT_ID"
-	liveFallbackSecretEnv            = "PLAID_SECRET"
-	liveSandboxInstitutionEnv        = "PLAID_SANDBOX_INSTITUTION_ID"
-	liveMicrodepositTokenEnv         = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN"
-	liveMicrodepositAcctEnv          = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID"
-	liveIncomeItemIDEnv              = "PLAID_LIVE_INCOME_ITEM_ID"
-	liveCheckUserIDEnv               = "PLAID_LIVE_CHECK_USER_ID"
-	liveCheckItemIDEnv               = "PLAID_LIVE_CHECK_ITEM_ID"
+	liveTestGateEnv           = "PLAID_RUN_LIVE_TESTS"
+	liveIncomeTestGateEnv     = "PLAID_RUN_LIVE_INCOME_TESTS"
+	liveCheckTestGateEnv      = "PLAID_RUN_LIVE_CHECK_TESTS"
+	liveSandboxClientIDEnv    = "PLAID_SANDBOX_CLIENT_ID"
+	liveSandboxSecretEnv      = "PLAID_SANDBOX_SECRET"
+	liveFallbackClientIDEnv   = "PLAID_CLIENT_ID"
+	liveFallbackSecretEnv     = "PLAID_SECRET"
+	liveSandboxInstitutionEnv = "PLAID_SANDBOX_INSTITUTION_ID"
+	liveMicrodepositTokenEnv  = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN"
+	liveMicrodepositAcctEnv   = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID"
+	liveIncomeItemIDEnv       = "PLAID_LIVE_INCOME_ITEM_ID"
+	liveCheckUserIDEnv        = "PLAID_LIVE_CHECK_USER_ID"
+	liveCheckItemIDEnv        = "PLAID_LIVE_CHECK_ITEM_ID"
 )
 
 type liveSandboxConfig struct {
@@ -378,7 +376,6 @@ func TestLiveSandboxDynamicTransactionsSuite(t *testing.T) {
 
 func TestLiveSandboxProcessorTokenCreate(t *testing.T) {
 	cfg := loadLiveSandboxConfig(t)
-	requireOptionalLiveSuite(t, liveProcessorTestGateEnv, "live sandbox processor token tests")
 
 	harness := newLiveSandboxHarness(t)
 	harness.initializeAppProfile(cfg)
@@ -395,7 +392,6 @@ func TestLiveSandboxProcessorTokenCreate(t *testing.T) {
 
 func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 	cfg := loadLiveSandboxConfig(t)
-	requireOptionalLiveSuite(t, livePaymentInitiationTestGateEnv, "live Payment Initiation sandbox tests")
 
 	harness := newLiveSandboxHarness(t)
 	harness.initializeAppProfile(cfg)

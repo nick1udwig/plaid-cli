@@ -3,9 +3,9 @@
 This repo has two layers of live Plaid sandbox coverage:
 
 - `just test-live`: the default live suite
-- opt-in product suites: processor, Payment Initiation, Income, and Plaid Check / Cash Flow Updates
+- opt-in manual-fixture suites: Income and Plaid Check / Cash Flow Updates
 
-The default live suite only needs valid sandbox app credentials. The opt-in suites need extra product access or special setup.
+The default live suite only needs valid sandbox app credentials. The opt-in suites need extra fixture env vars.
 
 ## Dashboard Access
 
@@ -33,54 +33,15 @@ This covers the core headless sandbox flow, plus:
 
 - user-linked `sandbox user-reset-login`
 - dynamic `sandbox transactions-create`
-
-No extra Dashboard product enablement is required beyond normal sandbox API access.
-
-## Processor Token Suite
-
-Run:
-
-```bash
-just test-live-processor
-```
-
-This exercises `sandbox processor-token-create`.
-
-Notes:
-
-- No extra Dashboard product enablement is usually required.
-- Plaid only returns a `processor_token`, not an `access_token`, so the test cannot remove the created sandbox Item afterward.
-- Keep this suite opt-in for that reason.
-
-## Payment Initiation Suite
-
-Run:
-
-```bash
-just test-live-payment
-```
-
-This exercises:
-
+- `sandbox processor-token-create`
 - `payment-initiation recipient create`
 - `payment-initiation payment create`
 - `sandbox payment-simulate`
 
-Dashboard setup:
-
-1. Open `Team Settings -> Products` in Plaid Dashboard.
-2. Enable or request `Payment Initiation`.
-3. If the product is unavailable, file an access request from the Dashboard.
-
 Notes:
 
-- Plaid’s Payment Initiation docs say the product is enabled in Sandbox by default, but some teams still have account-level access constraints.
-- If you need to adjust Payment Initiation sandbox behavior, Plaid documents additional controls on the Dashboard Sandbox page.
-
-Official references:
-
-- https://plaid.com/docs/payment-initiation/add-to-app/
-- https://plaid.com/docs/dashboard/team-management/teams/
+- `sandbox processor-token-create` returns only a `processor_token`, so the Item it creates cannot be cleaned up through this CLI.
+- The Payment Initiation path runs as part of `just test-live`. On this sandbox account it worked without extra env vars. If it fails on another account with a product-access error, enable or request `Payment Initiation` under `Team Settings -> Products`.
 
 ## Income Suite
 

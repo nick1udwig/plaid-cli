@@ -17,14 +17,6 @@ install: build
 test-live:
 	PLAID_RUN_LIVE_TESTS=1 go test -count=1 -run '^TestLive' ./...
 
-# Run the opt-in sandbox processor token smoke test.
-test-live-processor:
-	PLAID_RUN_LIVE_TESTS=1 PLAID_RUN_LIVE_PROCESSOR_TESTS=1 go test -count=1 -run '^TestLiveSandboxProcessorTokenCreate$' ./...
-
-# Run the opt-in Payment Initiation sandbox smoke test.
-test-live-payment:
-	PLAID_RUN_LIVE_TESTS=1 PLAID_RUN_LIVE_PAYMENT_INITIATION_TESTS=1 go test -count=1 -run '^TestLiveSandboxPaymentInitiationSuite$' ./...
-
 # Run the opt-in Income sandbox smoke test.
 test-live-income:
 	PLAID_RUN_LIVE_TESTS=1 PLAID_RUN_LIVE_INCOME_TESTS=1 go test -count=1 -run '^TestLiveSandboxIncomeSuite$' ./...

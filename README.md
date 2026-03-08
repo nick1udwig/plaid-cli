@@ -86,15 +86,7 @@ Run the live Plaid sandbox smoke suite:
 just test-live
 ```
 
-Run the product-gated live suites:
-
-```bash
-just test-live-processor
-```
-
-```bash
-just test-live-payment
-```
+Run the manual-fixture live suites:
 
 ```bash
 just test-live-income
@@ -107,6 +99,8 @@ just test-live-check
 The live suite is gated behind `PLAID_RUN_LIVE_TESTS=1`, uses a temporary state directory instead of `~/.plaid-cli`, and removes the sandbox Items it can clean up. It reads sandbox creds from `PLAID_SANDBOX_CLIENT_ID` / `PLAID_SANDBOX_SECRET`, falls back to `PLAID_CLIENT_ID` / `PLAID_SECRET`, and finally falls back to a saved sandbox app profile in `~/.plaid-cli/app-profile.json`.
 
 The `sandbox item-set-verification-status` smoke path is opt-in because Plaid requires a pre-created automated micro-deposit Item for that endpoint. To include it in `just test-live`, set `PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN` and `PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID`.
+
+`just test-live` also includes the processor-token and Payment Initiation live coverage, since those do not need extra fixture env vars.
 
 The Income suite requires `PLAID_LIVE_INCOME_ITEM_ID`. The Plaid Check suite requires `PLAID_LIVE_CHECK_USER_ID` and `PLAID_LIVE_CHECK_ITEM_ID`.
 
