@@ -581,6 +581,7 @@ func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 		"--periodic-alignment", "CALENDAR",
 	)
 	consentID := requireStringField(t, consentResp, "consent_id")
+	consentStatus := requireStringField(t, consentResp, "status")
 	consentGetResp := harness.mustRunJSON(
 		"payment-initiation",
 		"consent",
@@ -591,15 +592,124 @@ func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 		t.Fatalf("payment-initiation consent.get consent_id = %q, want %q", got, consentID)
 	}
 
+	paymentWebhookURL := "https://example.com/plaid-cli-live-payment"
+	var paymentWebhookInbox *liveWebhookInbox
+	inbox, err := newLiveWebhookInbox()
+	if err != nil {
+		t.Logf("skipping payment webhook delivery check: %v", err)
+	} else {
+		paymentWebhookInbox = inbox
+		paymentWebhookURL = paymentWebhookInbox.url
+	}
 	simulateResp := harness.mustRunJSON(
 		"sandbox",
 		"payment-simulate",
 		"--payment-id", paymentID,
-		"--webhook", "https://example.com/plaid-cli-live-payment",
-		"--status", "PAYMENT_STATUS_INITIATED",
+		"--webhook", paymentWebhookURL,
+		"--status", "PAYMENT_STATUS_EXECUTED",
 	)
 	if requireStringField(t, simulateResp, "request_id") == "" {
 		t.Fatal("sandbox payment-simulate did not include request_id")
+	}
+
+	executedSeen := false
+	for attempt := 1; attempt <= 10; attempt++ {
+		paymentGetAfterSimulateResp := harness.mustRunJSON(
+			"payment-initiation",
+			"payment",
+			"get",
+			"--payment-id", paymentID,
+		)
+		if got := requireStringField(t, paymentGetAfterSimulateResp, "payment_id"); got != paymentID {
+			t.Fatalf("payment-initiation payment.get payment_id = %q, want %q", got, paymentID)
+		}
+		if got := requireStringField(t, paymentGetAfterSimulateResp, "status"); got == "PAYMENT_STATUS_EXECUTED" {
+			executedSeen = true
+			break
+		}
+		if attempt < 10 {
+			t.Logf("payment.get has not shown PAYMENT_STATUS_EXECUTED yet (attempt %d/10); retrying", attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !executedSeen {
+		t.Fatal("payment.get did not report PAYMENT_STATUS_EXECUTED after sandbox payment-simulate")
+	}
+
+	if paymentWebhookInbox != nil {
+		request, payload := paymentWebhookInbox.mustWaitForJSONRequest(t, 45*time.Second, func(body map[string]any) bool {
+			paymentValue, ok := bodyValue(body, "payment_id")
+			if !ok || paymentValue != paymentID {
+				return false
+			}
+			webhookType, ok := bodyValue(body, "webhook_type")
+			if !ok || webhookType != "PAYMENT_INITIATION" {
+				return false
+			}
+			webhookCode, ok := bodyValue(body, "webhook_code")
+			if !ok || webhookCode != "PAYMENT_STATUS_UPDATE" {
+				return false
+			}
+			newStatus, ok := bodyValue(body, "new_payment_status")
+			return ok && newStatus == "PAYMENT_STATUS_EXECUTED"
+		})
+		if got := requireStringField(t, payload, "payment_id"); got != paymentID {
+			t.Fatalf("captured payment webhook payment_id = %q, want %q", got, paymentID)
+		}
+		if got := requireStringField(t, payload, "webhook_type"); got != "PAYMENT_INITIATION" {
+			t.Fatalf("captured payment webhook webhook_type = %q, want PAYMENT_INITIATION", got)
+		}
+		if got := requireStringField(t, payload, "webhook_code"); got != "PAYMENT_STATUS_UPDATE" {
+			t.Fatalf("captured payment webhook webhook_code = %q, want PAYMENT_STATUS_UPDATE", got)
+		}
+		if got := requireStringField(t, payload, "new_payment_status"); got != "PAYMENT_STATUS_EXECUTED" {
+			t.Fatalf("captured payment webhook new_payment_status = %q, want PAYMENT_STATUS_EXECUTED", got)
+		}
+		plaidVerification := request.headerValue("plaid-verification")
+		if plaidVerification == "" {
+			t.Fatal("captured payment webhook did not include plaid-verification header")
+		}
+		verifyResp := harness.mustRunJSON(
+			"webhook",
+			"verification-key",
+			"get",
+			"--plaid-verification", plaidVerification,
+		)
+		if requireStringField(t, verifyResp, "key", "kid") == "" {
+			t.Fatal("payment webhook verification-key.get did not include key.kid")
+		}
+	}
+
+	if consentStatus == "AUTHORISED" {
+		executeResp, err := harness.runJSON(
+			"payment-initiation",
+			"consent",
+			"payment-execute",
+			"--consent-id", consentID,
+			"--idempotency-key", fmt.Sprintf("consent-exec-%d", time.Now().UTC().UnixNano()),
+			"--amount-currency", "GBP",
+			"--amount-value", "5.25",
+			"--reference", "ConsentExec123",
+		)
+		if err != nil {
+			t.Logf("skipping consent payment-execute coverage after sandbox error: %v", err)
+		} else {
+			executedPaymentID := requireStringField(t, executeResp, "payment_id")
+			if executedPaymentID == "" {
+				t.Fatal("payment-initiation consent.payment-execute did not include payment_id")
+			}
+			executedPaymentGetResp := harness.mustRunJSON(
+				"payment-initiation",
+				"payment",
+				"get",
+				"--payment-id", executedPaymentID,
+			)
+			if got := requireStringField(t, executedPaymentGetResp, "payment_id"); got != executedPaymentID {
+				t.Fatalf("payment-initiation payment.get payment_id = %q, want %q", got, executedPaymentID)
+			}
+		}
+	} else {
+		t.Logf("skipping consent payment-execute coverage because consent status is %q", consentStatus)
 	}
 }
 
@@ -672,6 +782,107 @@ func TestLiveSandboxWebhookDeliverySuite(t *testing.T) {
 	)
 	if requireStringField(t, verifyResp, "key", "kid") == "" {
 		t.Fatal("webhook verification-key.get did not include key.kid")
+	}
+
+	recurringWebhookResp := harness.mustRunJSON(
+		"sandbox",
+		"item-fire-webhook",
+		"--item", item.ItemID,
+		"--webhook-code", "RECURRING_TRANSACTIONS_UPDATE",
+	)
+	if requireStringField(t, recurringWebhookResp, "request_id") == "" {
+		t.Fatal("sandbox item-fire-webhook for recurring transactions did not include request_id")
+	}
+	recurringRequest, recurringPayload := inbox.mustWaitForJSONRequest(t, 45*time.Second, func(body map[string]any) bool {
+		itemValue, ok := bodyValue(body, "item_id")
+		if !ok || itemValue != item.ItemID {
+			return false
+		}
+		webhookType, ok := bodyValue(body, "webhook_type")
+		if !ok || webhookType != "TRANSACTIONS" {
+			return false
+		}
+		webhookCode, ok := bodyValue(body, "webhook_code")
+		return ok && webhookCode == "RECURRING_TRANSACTIONS_UPDATE"
+	})
+	if got := requireStringField(t, recurringPayload, "webhook_code"); got != "RECURRING_TRANSACTIONS_UPDATE" {
+		t.Fatalf("captured recurring transactions webhook webhook_code = %q, want RECURRING_TRANSACTIONS_UPDATE", got)
+	}
+	if recurringRequest.headerValue("plaid-verification") == "" {
+		t.Fatal("captured recurring transactions webhook did not include plaid-verification header")
+	}
+
+	newAccountsWebhookResp, err := harness.runJSON(
+		"sandbox",
+		"item-fire-webhook",
+		"--item", item.ItemID,
+		"--webhook-code", "NEW_ACCOUNTS_AVAILABLE",
+	)
+	if err != nil {
+		var apiErr *plaid.APIError
+		if errors.As(err, &apiErr) && apiErr.ErrorCode == "SANDBOX_ACCOUNT_SELECT_V2_NOT_ENABLED" {
+			t.Logf("skipping NEW_ACCOUNTS_AVAILABLE webhook delivery check: %v", err)
+		} else {
+			t.Fatal(err)
+		}
+	} else {
+		if requireStringField(t, newAccountsWebhookResp, "request_id") == "" {
+			t.Fatal("sandbox item-fire-webhook for new accounts did not include request_id")
+		}
+		_, newAccountsPayload := inbox.mustWaitForJSONRequest(t, 45*time.Second, func(body map[string]any) bool {
+			itemValue, ok := bodyValue(body, "item_id")
+			if !ok || itemValue != item.ItemID {
+				return false
+			}
+			webhookType, ok := bodyValue(body, "webhook_type")
+			if !ok || webhookType != "ITEM" {
+				return false
+			}
+			webhookCode, ok := bodyValue(body, "webhook_code")
+			return ok && webhookCode == "NEW_ACCOUNTS_AVAILABLE"
+		})
+		if got := requireStringField(t, newAccountsPayload, "webhook_code"); got != "NEW_ACCOUNTS_AVAILABLE" {
+			t.Fatalf("captured item webhook webhook_code = %q, want NEW_ACCOUNTS_AVAILABLE", got)
+		}
+	}
+
+	authItem := harness.createSandboxItem(cfg, []string{"auth"})
+	authWebhookUpdateResp := harness.mustRunJSON(
+		"item",
+		"webhook-update",
+		"--item", authItem.ItemID,
+		"--webhook-url", inbox.url,
+	)
+	if requireStringField(t, authWebhookUpdateResp, "request_id") == "" {
+		t.Fatal("item.webhook-update for auth item did not include request_id")
+	}
+	authWebhookResp := harness.mustRunJSON(
+		"sandbox",
+		"item-fire-webhook",
+		"--item", authItem.ItemID,
+		"--webhook-type", "AUTH",
+		"--webhook-code", "DEFAULT_UPDATE",
+	)
+	if requireStringField(t, authWebhookResp, "request_id") == "" {
+		t.Fatal("sandbox item-fire-webhook for auth did not include request_id")
+	}
+	_, authPayload := inbox.mustWaitForJSONRequest(t, 45*time.Second, func(body map[string]any) bool {
+		itemValue, ok := bodyValue(body, "item_id")
+		if !ok || itemValue != authItem.ItemID {
+			return false
+		}
+		webhookType, ok := bodyValue(body, "webhook_type")
+		if !ok || webhookType != "AUTH" {
+			return false
+		}
+		webhookCode, ok := bodyValue(body, "webhook_code")
+		return ok && webhookCode == "DEFAULT_UPDATE"
+	})
+	if got := requireStringField(t, authPayload, "webhook_type"); got != "AUTH" {
+		t.Fatalf("captured auth webhook webhook_type = %q, want AUTH", got)
+	}
+	if got := requireStringField(t, authPayload, "webhook_code"); got != "DEFAULT_UPDATE" {
+		t.Fatalf("captured auth webhook webhook_code = %q, want DEFAULT_UPDATE", got)
 	}
 }
 
@@ -940,6 +1151,58 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 	}
 	if !foundPostedEvent {
 		t.Fatal("transfer event.list did not include a posted event after sandbox transfer simulate")
+	}
+
+	settledResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"simulate",
+		"--transfer-id", transferID,
+		"--event-type", "settled",
+	)
+	if requireStringField(t, settledResp, "request_id") == "" {
+		t.Fatal("sandbox transfer simulate settled did not include request_id")
+	}
+	foundSettledEvent := false
+	for attempt := 1; attempt <= 10; attempt++ {
+		eventListResp := harness.mustRunJSON("transfer", "event", "list", "--transfer-id", transferID, "--count", "25")
+		if arrayContainsMapFieldValue(requireArrayField(t, eventListResp, "transfer_events"), "event_type", "settled") {
+			foundSettledEvent = true
+			break
+		}
+		if attempt < 10 {
+			t.Logf("transfer event.list has not shown settled yet (attempt %d/10); retrying", attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !foundSettledEvent {
+		t.Fatal("transfer event.list did not include a settled event after sandbox transfer simulate")
+	}
+
+	fundsAvailableResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"simulate",
+		"--transfer-id", transferID,
+		"--event-type", "funds_available",
+	)
+	if requireStringField(t, fundsAvailableResp, "request_id") == "" {
+		t.Fatal("sandbox transfer simulate funds_available did not include request_id")
+	}
+	foundFundsAvailableEvent := false
+	for attempt := 1; attempt <= 10; attempt++ {
+		eventListResp := harness.mustRunJSON("transfer", "event", "list", "--transfer-id", transferID, "--count", "25")
+		if arrayContainsMapFieldValue(requireArrayField(t, eventListResp, "transfer_events"), "event_type", "funds_available") {
+			foundFundsAvailableEvent = true
+			break
+		}
+		if attempt < 10 {
+			t.Logf("transfer event.list has not shown funds_available yet (attempt %d/10); retrying", attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !foundFundsAvailableEvent {
+		t.Fatal("transfer event.list did not include a funds_available event after sandbox transfer simulate")
 	}
 
 	sweepSimResp := harness.mustRunJSON(
