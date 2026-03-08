@@ -17,6 +17,8 @@ func newTransferCmd() *cobra.Command {
 	cmd.AddCommand(newTransferEventCmd())
 	cmd.AddCommand(newTransferRefundCmd())
 	cmd.AddCommand(newTransferSweepCmd())
+	cmd.AddCommand(newTransferRecurringCmd())
+	cmd.AddCommand(newTransferMetricsCmd())
 	cmd.AddCommand(newTransferCapabilitiesCmd())
 	cmd.AddCommand(newTransferIntentCmd())
 

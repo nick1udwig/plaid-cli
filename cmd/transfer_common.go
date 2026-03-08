@@ -15,6 +15,8 @@ const (
 	transferReadingDocPath        = "docs/plaid/api/products/transfer/reading-transfers/index.md"
 	transferRefundsDocPath        = "docs/plaid/api/products/transfer/refunds/index.md"
 	transferAccountLinkingDocPath = "docs/plaid/api/products/transfer/account-linking/index.md"
+	transferRecurringDocPath      = "docs/plaid/api/products/transfer/recurring-transfers/index.md"
+	transferMetricsDocPath        = "docs/plaid/api/products/transfer/metrics/index.md"
 )
 
 func populateAccessToken(cmd *cobra.Command, store *state.Store, body map[string]any, itemID, accessToken string) (*state.ItemRecord, error) {
