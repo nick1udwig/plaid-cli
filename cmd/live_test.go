@@ -109,11 +109,24 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 	if requireStringField(t, institutionResp, "institution", "name") == "" {
 		t.Fatal("institution response did not include institution.name")
 	}
-	institutionListResp := harness.mustRunJSON("institution", "get", "--count", "5")
+	institutionListResp := harness.mustRunJSONRetryProductReady(
+		5,
+		3*time.Second,
+		"institution",
+		"get",
+		"--count", "5",
+	)
 	if len(requireArrayField(t, institutionListResp, "institutions")) == 0 {
 		t.Fatal("institution.get returned no institutions")
 	}
-	institutionSearchResp := harness.mustRunJSON("institution", "search", "--query", "Chase", "--product", "auth")
+	institutionSearchResp := harness.mustRunJSONRetryProductReady(
+		5,
+		3*time.Second,
+		"institution",
+		"search",
+		"--query", "Chase",
+		"--product", "auth",
+	)
 	if len(requireArrayField(t, institutionSearchResp, "institutions")) == 0 {
 		t.Fatal("institution.search returned no institutions")
 	}
@@ -505,6 +518,24 @@ func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 		"--iban", "GB29NWBK60161331926819",
 	)
 	recipientID := requireStringField(t, recipientResp, "recipient_id")
+	recipientGetResp := harness.mustRunJSON(
+		"payment-initiation",
+		"recipient",
+		"get",
+		"--recipient-id", recipientID,
+	)
+	if got := requireStringField(t, recipientGetResp, "recipient_id"); got != recipientID {
+		t.Fatalf("payment-initiation recipient.get recipient_id = %q, want %q", got, recipientID)
+	}
+	recipientListResp := harness.mustRunJSON(
+		"payment-initiation",
+		"recipient",
+		"list",
+		"--count", "10",
+	)
+	if !arrayContainsMapField(requireArrayField(t, recipientListResp, "recipients"), "recipient_id", recipientID) {
+		t.Fatalf("payment-initiation recipient.list did not include recipient %q", recipientID)
+	}
 
 	paymentResp := harness.mustRunJSON(
 		"payment-initiation",
@@ -516,6 +547,49 @@ func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 		"--amount-value", "10.50",
 	)
 	paymentID := requireStringField(t, paymentResp, "payment_id")
+	paymentGetResp := harness.mustRunJSON(
+		"payment-initiation",
+		"payment",
+		"get",
+		"--payment-id", paymentID,
+	)
+	if got := requireStringField(t, paymentGetResp, "payment_id"); got != paymentID {
+		t.Fatalf("payment-initiation payment.get payment_id = %q, want %q", got, paymentID)
+	}
+	paymentListResp := harness.mustRunJSON(
+		"payment-initiation",
+		"payment",
+		"list",
+		"--count", "10",
+	)
+	if !arrayContainsMapField(requireArrayField(t, paymentListResp, "payments"), "payment_id", paymentID) {
+		t.Fatalf("payment-initiation payment.list did not include payment %q", paymentID)
+	}
+
+	consentResp := harness.mustRunJSON(
+		"payment-initiation",
+		"consent",
+		"create",
+		"--recipient-id", recipientID,
+		"--reference", "Consent123",
+		"--type", "COMMERCIAL",
+		"--max-amount-currency", "GBP",
+		"--max-amount-value", "15.00",
+		"--periodic-amount-currency", "GBP",
+		"--periodic-amount-value", "40.00",
+		"--periodic-interval", "MONTH",
+		"--periodic-alignment", "CALENDAR",
+	)
+	consentID := requireStringField(t, consentResp, "consent_id")
+	consentGetResp := harness.mustRunJSON(
+		"payment-initiation",
+		"consent",
+		"get",
+		"--consent-id", consentID,
+	)
+	if got := requireStringField(t, consentGetResp, "consent_id"); got != consentID {
+		t.Fatalf("payment-initiation consent.get consent_id = %q, want %q", got, consentID)
+	}
 
 	simulateResp := harness.mustRunJSON(
 		"sandbox",
@@ -624,6 +698,39 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		t.Fatal("transfer capabilities.get did not include request_id")
 	}
 
+	clockVirtualTime := time.Now().UTC().Truncate(time.Second)
+	for clockVirtualTime.Weekday() != time.Sunday {
+		clockVirtualTime = clockVirtualTime.AddDate(0, 0, 1)
+	}
+	clockResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"test-clock",
+		"create",
+		"--virtual-time", clockVirtualTime.Format(time.RFC3339),
+	)
+	testClockID := requireStringField(t, clockResp, "test_clock", "test_clock_id")
+	clockGetResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"test-clock",
+		"get",
+		"--test-clock-id", testClockID,
+	)
+	if got := requireStringField(t, clockGetResp, "test_clock", "test_clock_id"); got != testClockID {
+		t.Fatalf("sandbox transfer test-clock.get test_clock_id = %q, want %q", got, testClockID)
+	}
+	clockListResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"test-clock",
+		"list",
+		"--count", "10",
+	)
+	if !arrayContainsMapField(requireArrayField(t, clockListResp, "test_clocks"), "test_clock_id", testClockID) {
+		t.Fatalf("sandbox transfer test-clock.list did not include test clock %q", testClockID)
+	}
+
 	authorizationResp := harness.mustRunJSON(
 		"transfer",
 		"authorization",
@@ -651,6 +758,33 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 		"--description", "live transfer",
 	)
 	transferID := requireStringField(t, createResp, "transfer", "id")
+	refundResp := harness.mustRunJSON(
+		"transfer",
+		"refund",
+		"create",
+		"--transfer-id", transferID,
+		"--amount", "0.50",
+		"--idempotency-key", fmt.Sprintf("refund-%d", time.Now().UTC().UnixNano()),
+	)
+	refundID := requireStringField(t, refundResp, "refund", "id")
+	refundGetResp := harness.mustRunJSON(
+		"transfer",
+		"refund",
+		"get",
+		"--refund-id", refundID,
+	)
+	if got := requireStringField(t, refundGetResp, "refund", "id"); got != refundID {
+		t.Fatalf("transfer refund.get refund.id = %q, want %q", got, refundID)
+	}
+	refundCancelResp := harness.mustRunJSON(
+		"transfer",
+		"refund",
+		"cancel",
+		"--refund-id", refundID,
+	)
+	if requireStringField(t, refundCancelResp, "request_id") == "" {
+		t.Fatal("transfer refund.cancel did not include request_id")
+	}
 
 	getResp := harness.mustRunJSON("transfer", "get", "--transfer-id", transferID)
 	if got := requireStringField(t, getResp, "transfer", "id"); got != transferID {
@@ -660,6 +794,82 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 	listResp := harness.mustRunJSON("transfer", "list", "--count", "10")
 	if !arrayContainsMapField(requireArrayField(t, listResp, "transfers"), "id", transferID) {
 		t.Fatalf("transfer.list did not include transfer %q", transferID)
+	}
+
+	recurringStartDate := clockVirtualTime.AddDate(0, 0, 1)
+	for recurringStartDate.Weekday() != time.Monday {
+		recurringStartDate = recurringStartDate.AddDate(0, 0, 1)
+	}
+	recurringResp := harness.mustRunJSON(
+		"transfer",
+		"recurring",
+		"create",
+		"--item", item.ItemID,
+		"--account-id", accountID,
+		"--idempotency-key", fmt.Sprintf("recur-%d", time.Now().UTC().UnixNano()),
+		"--type", "debit",
+		"--network", "ach",
+		"--ach-class", "ppd",
+		"--amount", "1.00",
+		"--description", "live recur",
+		"--legal-name", "Plaid CLI Live Test",
+		"--ip-address", "203.0.113.10",
+		"--user-agent", "plaid-cli/1",
+		"--interval-unit", "week",
+		"--interval-count", "1",
+		"--interval-execution-day", "1",
+		"--start-date", recurringStartDate.Format("2006-01-02"),
+		"--test-clock-id", testClockID,
+	)
+	recurringTransferID := requireStringField(t, recurringResp, "recurring_transfer", "recurring_transfer_id")
+	recurringGetResp := harness.mustRunJSON(
+		"transfer",
+		"recurring",
+		"get",
+		"--recurring-transfer-id", recurringTransferID,
+	)
+	if got := requireStringField(t, recurringGetResp, "recurring_transfer", "recurring_transfer_id"); got != recurringTransferID {
+		t.Fatalf("transfer recurring.get recurring_transfer_id = %q, want %q", got, recurringTransferID)
+	}
+	recurringListResp := harness.mustRunJSON(
+		"transfer",
+		"recurring",
+		"list",
+		"--count", "10",
+	)
+	if !arrayContainsMapField(requireArrayField(t, recurringListResp, "recurring_transfers"), "recurring_transfer_id", recurringTransferID) {
+		t.Fatalf("transfer recurring.list did not include recurring transfer %q", recurringTransferID)
+	}
+	clockAdvanceTime := recurringStartDate.AddDate(0, 0, 8).Format(time.RFC3339)
+	clockAdvanceResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"test-clock",
+		"advance",
+		"--test-clock-id", testClockID,
+		"--new-virtual-time", clockAdvanceTime,
+	)
+	if requireStringField(t, clockAdvanceResp, "request_id") == "" {
+		t.Fatal("sandbox transfer test-clock.advance did not include request_id")
+	}
+	clockGetAfterAdvanceResp := harness.mustRunJSON(
+		"sandbox",
+		"transfer",
+		"test-clock",
+		"get",
+		"--test-clock-id", testClockID,
+	)
+	if got := requireStringField(t, clockGetAfterAdvanceResp, "test_clock", "virtual_time"); got != clockAdvanceTime {
+		t.Fatalf("sandbox transfer test-clock.get virtual_time = %q, want %q", got, clockAdvanceTime)
+	}
+	recurringCancelResp := harness.mustRunJSON(
+		"transfer",
+		"recurring",
+		"cancel",
+		"--recurring-transfer-id", recurringTransferID,
+	)
+	if requireStringField(t, recurringCancelResp, "request_id") == "" {
+		t.Fatal("transfer recurring.cancel did not include request_id")
 	}
 
 	simulateResp := harness.mustRunJSON(
@@ -1020,8 +1230,8 @@ func (h *liveSandboxHarness) mustRunJSONRetryProductReady(attempts int, delay ti
 		}
 
 		var apiErr *plaid.APIError
-		if errors.As(err, &apiErr) && apiErr.ErrorCode == "PRODUCT_NOT_READY" && attempt < attempts {
-			h.t.Logf("%s not ready yet (attempt %d/%d); retrying in %s", strings.Join(args, " "), attempt, attempts, delay)
+		if errors.As(err, &apiErr) && (apiErr.ErrorCode == "PRODUCT_NOT_READY" || apiErr.ErrorType == "RATE_LIMIT_EXCEEDED") && attempt < attempts {
+			h.t.Logf("%s returned transient Plaid error %s/%s (attempt %d/%d); retrying in %s", strings.Join(args, " "), apiErr.ErrorType, apiErr.ErrorCode, attempt, attempts, delay)
 			time.Sleep(delay)
 			continue
 		}

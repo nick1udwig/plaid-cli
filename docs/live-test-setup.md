@@ -38,9 +38,12 @@ This covers the core headless sandbox flow, plus:
 - processor `account/auth/balance/identity/transactions/*` reads
 - webhook delivery plus `webhook verification-key get`
 - `payment-initiation recipient create`
+- `payment-initiation recipient get/list`
 - `payment-initiation payment create`
+- `payment-initiation payment get/list`
+- `payment-initiation consent create/get`
 - `sandbox payment-simulate`
-- Transfer capabilities, authorization, create/get/list, sandbox simulate, and event reads when Transfer is enabled
+- Transfer capabilities, authorization, create/get/list, refund create/get/cancel, recurring create/get/list/cancel, sandbox test-clock create/get/list/advance, sandbox simulate, and event reads when Transfer is enabled
 
 Notes:
 
