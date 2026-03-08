@@ -22,6 +22,8 @@ const (
 	liveFallbackClientIDEnv   = "PLAID_CLIENT_ID"
 	liveFallbackSecretEnv     = "PLAID_SECRET"
 	liveSandboxInstitutionEnv = "PLAID_SANDBOX_INSTITUTION_ID"
+	liveMicrodepositTokenEnv  = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN"
+	liveMicrodepositAcctEnv   = "PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID"
 )
 
 type liveSandboxConfig struct {
@@ -80,10 +82,23 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 	if requireStringField(t, institutionResp, "institution", "name") == "" {
 		t.Fatal("institution response did not include institution.name")
 	}
+	institutionListResp := harness.mustRunJSON("institution", "get", "--count", "5")
+	if len(requireArrayField(t, institutionListResp, "institutions")) == 0 {
+		t.Fatal("institution.get returned no institutions")
+	}
+	institutionSearchResp := harness.mustRunJSON("institution", "search", "--query", "Chase", "--product", "auth")
+	if len(requireArrayField(t, institutionSearchResp, "institutions")) == 0 {
+		t.Fatal("institution.search returned no institutions")
+	}
 
 	linkResp := harness.mustRunJSON("link", "token-create", "--product", "auth", "--client-user-id", "plaid-cli-live-test")
-	if requireStringField(t, linkResp, "link_token") == "" {
+	linkToken := requireStringField(t, linkResp, "link_token")
+	if linkToken == "" {
 		t.Fatal("link token response did not include link_token")
+	}
+	linkGetResp := harness.mustRunJSON("link", "token-get", "--link-token", linkToken)
+	if requireStringField(t, linkGetResp, "request_id") == "" {
+		t.Fatal("link token-get response did not include request_id")
 	}
 
 	publicTokenResp := harness.mustRunJSON(
@@ -141,6 +156,11 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 		t.Fatal("auth.get returned no accounts")
 	}
 
+	balanceResp := harness.mustRunJSON("balance", "get", "--item", itemID)
+	if len(requireArrayField(t, balanceResp, "accounts")) == 0 {
+		t.Fatal("balance.get returned no accounts")
+	}
+
 	transactionsResp := harness.mustRunJSONRetryProductReady(
 		10,
 		3*time.Second,
@@ -151,6 +171,86 @@ func TestLiveSandboxSmokeSuite(t *testing.T) {
 	)
 	if requireStringField(t, transactionsResp, "next_cursor") == "" {
 		t.Fatal("transactions.sync did not include next_cursor")
+	}
+	startDate := time.Now().UTC().AddDate(0, 0, -365).Format("2006-01-02")
+	endDate := time.Now().UTC().Format("2006-01-02")
+	transactionsGetResp := harness.mustRunJSONRetryProductReady(
+		10,
+		3*time.Second,
+		"transactions",
+		"get",
+		"--item", itemID,
+		"--start-date", startDate,
+		"--end-date", endDate,
+		"--count", "25",
+	)
+	if len(requireArrayField(t, transactionsGetResp, "transactions")) == 0 {
+		t.Fatal("transactions.get returned no transactions")
+	}
+	transactionsRecurringResp := harness.mustRunJSONRetryProductReady(
+		10,
+		3*time.Second,
+		"transactions",
+		"recurring-get",
+		"--item", itemID,
+	)
+	requireArrayField(t, transactionsRecurringResp, "inflow_streams")
+	requireArrayField(t, transactionsRecurringResp, "outflow_streams")
+
+	invalidateResp := harness.mustRunJSON("item", "access-token-invalidate", "--item", itemID)
+	newAccessToken := requireStringField(t, invalidateResp, "new_access_token")
+	if newAccessToken == accessToken {
+		t.Fatal("item.access-token-invalidate returned the existing access token")
+	}
+	harness.updateItemAccessToken(itemID, newAccessToken)
+	updatedRecord, err := store.LoadItem(itemID)
+	if err != nil {
+		t.Fatalf("LoadItem(%q) after invalidate error = %v", itemID, err)
+	}
+	if updatedRecord.AccessToken != newAccessToken {
+		t.Fatalf("saved item access token = %q, want %q", updatedRecord.AccessToken, newAccessToken)
+	}
+
+	webhookUpdateResp := harness.mustRunJSON(
+		"item",
+		"webhook-update",
+		"--item", itemID,
+		"--webhook-url", "https://example.com/plaid-cli-live-test",
+	)
+	if requireStringField(t, webhookUpdateResp, "request_id") == "" {
+		t.Fatal("item.webhook-update did not include request_id")
+	}
+
+	fireWebhookResp := harness.mustRunJSON(
+		"sandbox",
+		"item-fire-webhook",
+		"--item", itemID,
+		"--webhook-type", "TRANSACTIONS",
+		"--webhook-code", "DEFAULT_UPDATE",
+	)
+	if requireStringField(t, fireWebhookResp, "request_id") == "" {
+		t.Fatal("sandbox item-fire-webhook did not include request_id")
+	}
+
+	microdepositAccessToken := strings.TrimSpace(os.Getenv(liveMicrodepositTokenEnv))
+	microdepositAccountID := strings.TrimSpace(os.Getenv(liveMicrodepositAcctEnv))
+	if microdepositAccessToken != "" && microdepositAccountID != "" {
+		setVerificationResp := harness.mustRunJSON(
+			"sandbox",
+			"item-set-verification-status",
+			"--access-token", microdepositAccessToken,
+			"--account-id", microdepositAccountID,
+			"--verification-status", "automatically_verified",
+		)
+		if requireStringField(t, setVerificationResp, "request_id") == "" {
+			t.Fatal("sandbox item-set-verification-status did not include request_id")
+		}
+	} else {
+		t.Logf(
+			"skipping sandbox item-set-verification-status smoke test; set %s and %s to run it against a pre-created automated micro-deposit item",
+			liveMicrodepositTokenEnv,
+			liveMicrodepositAcctEnv,
+		)
 	}
 
 	resetResp := harness.mustRunJSON("sandbox", "item-reset-login", "--item", itemID)
@@ -244,6 +344,16 @@ func (h *liveSandboxHarness) untrackItem(itemID string) {
 		filtered = append(filtered, item)
 	}
 	h.cleanupItems = filtered
+}
+
+func (h *liveSandboxHarness) updateItemAccessToken(itemID, accessToken string) {
+	for i := range h.cleanupItems {
+		if h.cleanupItems[i].ItemID == itemID {
+			h.cleanupItems[i].AccessToken = accessToken
+			return
+		}
+	}
+	h.trackItem(itemID, accessToken)
 }
 
 func (h *liveSandboxHarness) mustRunJSON(args ...string) map[string]any {

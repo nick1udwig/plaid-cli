@@ -87,3 +87,5 @@ just test-live
 ```
 
 The live suite is gated behind `PLAID_RUN_LIVE_TESTS=1`, uses a temporary state directory instead of `~/.plaid-cli`, and removes the sandbox Item it creates. It reads sandbox creds from `PLAID_SANDBOX_CLIENT_ID` / `PLAID_SANDBOX_SECRET`, falls back to `PLAID_CLIENT_ID` / `PLAID_SECRET`, and finally falls back to a saved sandbox app profile in `~/.plaid-cli/app-profile.json`.
+
+The `sandbox item-set-verification-status` smoke path is opt-in because Plaid requires a pre-created automated micro-deposit Item for that endpoint. To include it in `just test-live`, set `PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCESS_TOKEN` and `PLAID_LIVE_AUTOMATED_MICRODEPOSIT_ACCOUNT_ID`.
