@@ -13,8 +13,15 @@ func newSandboxCmd() *cobra.Command {
 		Long:  "Sandbox-only commands for testing write paths and webhook behavior.",
 	}
 	cmd.AddCommand(newSandboxPublicTokenCreateCmd())
+	cmd.AddCommand(newSandboxProcessorTokenCreateCmd())
 	cmd.AddCommand(newSandboxItemResetLoginCmd())
+	cmd.AddCommand(newSandboxUserResetLoginCmd())
 	cmd.AddCommand(newSandboxItemFireWebhookCmd())
+	cmd.AddCommand(newSandboxItemSetVerificationStatusCmd())
+	cmd.AddCommand(newSandboxIncomeFireWebhookCmd())
+	cmd.AddCommand(newSandboxCRACmd())
+	cmd.AddCommand(newSandboxPaymentSimulateCmd())
+	cmd.AddCommand(newSandboxTransactionsCreateCmd())
 	cmd.AddCommand(newSandboxTransferCmd())
 	return cmd
 }
@@ -132,7 +139,7 @@ func newSandboxItemResetLoginCmd() *cobra.Command {
 }
 
 func newSandboxItemFireWebhookCmd() *cobra.Command {
-	var itemID, accessToken, webhookCode string
+	var itemID, accessToken, webhookType, webhookCode string
 	var info *commandInfoFlags
 	var bodyFlags *requestBodyFlags
 
@@ -163,6 +170,9 @@ func newSandboxItemFireWebhookCmd() *cobra.Command {
 			if _, err := populateAccessToken(cmd, store, body, itemID, accessToken); err != nil {
 				return err
 			}
+			if err := applyStringFlag(cmd, body, "webhook-type", webhookType, "webhook_type"); err != nil {
+				return err
+			}
 			if err := applyStringFlag(cmd, body, "webhook-code", webhookCode, "webhook_code"); err != nil {
 				return err
 			}
@@ -186,6 +196,7 @@ func newSandboxItemFireWebhookCmd() *cobra.Command {
 	bodyFlags = bindBodyFlag(cmd)
 	cmd.Flags().StringVar(&itemID, "item", "", "Saved local item_id to use")
 	cmd.Flags().StringVar(&accessToken, "access-token", "", "Explicit Plaid access_token override")
+	cmd.Flags().StringVar(&webhookType, "webhook-type", "", "Sandbox webhook type such as ITEM, AUTH, TRANSACTIONS, or ASSETS")
 	cmd.Flags().StringVar(&webhookCode, "webhook-code", "", "Sandbox webhook code to fire")
 	return cmd
 }

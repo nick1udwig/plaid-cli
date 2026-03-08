@@ -74,6 +74,7 @@ func NewRootCmd(opts *Options) *cobra.Command {
 	cmd.AddCommand(newOAuthCmd())
 	cmd.AddCommand(newConsentCmd())
 	cmd.AddCommand(newNetworkCmd())
+	cmd.AddCommand(newWebhookCmd())
 	cmd.AddCommand(newAssetsCmd())
 	cmd.AddCommand(newBeaconCmd())
 	cmd.AddCommand(newLiabilitiesCmd())
