@@ -504,6 +504,138 @@ func TestLiveSandboxProcessorSuite(t *testing.T) {
 	}
 }
 
+func TestLiveSandboxAdditionalReadProductsSuite(t *testing.T) {
+	cfg := loadLiveSandboxConfig(t)
+	harness := newLiveSandboxHarness(t)
+	cleanupClient := newLiveSandboxClient(t, cfg)
+	t.Cleanup(func() {
+		harness.cleanup(t, cleanupClient)
+	})
+
+	harness.initializeAppProfile(cfg)
+
+	t.Run("identity get", func(t *testing.T) {
+		item, err := harness.tryCreateSandboxItem(cfg, []string{"identity"})
+		if err != nil {
+			skipUnavailableLiveProduct(t, "identity", err)
+		}
+
+		resp, err := harness.runJSON("identity", "get", "--item", item.ItemID)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "identity", err)
+		}
+		if len(requireArrayField(t, resp, "accounts")) == 0 {
+			t.Fatal("identity.get returned no accounts")
+		}
+	})
+
+	t.Run("liabilities get", func(t *testing.T) {
+		item, err := harness.tryCreateSandboxItem(cfg, []string{"liabilities"})
+		if err != nil {
+			skipUnavailableLiveProduct(t, "liabilities", err)
+		}
+
+		resp, err := harness.runJSON("liabilities", "get", "--item", item.ItemID)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "liabilities", err)
+		}
+		if len(requireArrayField(t, resp, "accounts")) == 0 {
+			t.Fatal("liabilities.get returned no accounts")
+		}
+		if _, ok := bodyValue(resp, "liabilities"); !ok {
+			t.Fatal("liabilities.get did not include liabilities")
+		}
+	})
+
+	t.Run("investments holdings and transactions", func(t *testing.T) {
+		item, err := harness.tryCreateSandboxItem(cfg, []string{"investments"})
+		if err != nil {
+			skipUnavailableLiveProduct(t, "investments", err)
+		}
+
+		holdingsResp, err := harness.runJSON("investments", "holdings-get", "--item", item.ItemID)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "investments holdings", err)
+		}
+		if len(requireArrayField(t, holdingsResp, "accounts")) == 0 {
+			t.Fatal("investments holdings-get returned no accounts")
+		}
+		if _, ok := bodyValue(holdingsResp, "holdings"); !ok {
+			t.Fatal("investments holdings-get did not include holdings")
+		}
+
+		startDate := time.Now().UTC().AddDate(0, -1, 0).Format("2006-01-02")
+		endDate := time.Now().UTC().Format("2006-01-02")
+		transactionsResp, err := harness.runJSON(
+			"investments",
+			"transactions-get",
+			"--item", item.ItemID,
+			"--start-date", startDate,
+			"--end-date", endDate,
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "investments transactions", err)
+		}
+		if len(requireArrayField(t, transactionsResp, "accounts")) == 0 {
+			t.Fatal("investments transactions-get returned no accounts")
+		}
+		if _, ok := bodyValue(transactionsResp, "investment_transactions"); !ok {
+			t.Fatal("investments transactions-get did not include investment_transactions")
+		}
+	})
+
+	t.Run("signal evaluate", func(t *testing.T) {
+		item, err := harness.tryCreateSandboxItem(cfg, []string{"auth"})
+		if err != nil {
+			skipUnavailableLiveProduct(t, "signal bootstrap auth item", err)
+		}
+		accountID := harness.requireItemAccountID(item.ItemID)
+
+		resp, err := harness.runJSON(
+			"signal",
+			"evaluate",
+			"--item", item.ItemID,
+			"--account-id", accountID,
+			"--client-transaction-id", fmt.Sprintf("signal-live-%d", time.Now().UTC().UnixNano()),
+			"--amount", "12.34",
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "signal", err)
+		}
+		if requireStringField(t, resp, "request_id") == "" {
+			t.Fatal("signal.evaluate did not include request_id")
+		}
+	})
+
+	t.Run("statements list", func(t *testing.T) {
+		statementStartDate := time.Now().UTC().AddDate(0, -3, 0).Format("2006-01-02")
+		statementEndDate := time.Now().UTC().Format("2006-01-02")
+		item, err := harness.tryCreateSandboxItem(
+			cfg,
+			[]string{"statements"},
+			"--body", marshalBodyArg(t, map[string]any{
+				"options": map[string]any{
+					"statements": map[string]any{
+						"start_date": statementStartDate,
+						"end_date":   statementEndDate,
+					},
+				},
+			}),
+		)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "statements", err)
+		}
+
+		resp, err := harness.runJSON("statements", "list", "--item", item.ItemID)
+		if err != nil {
+			skipUnavailableLiveProduct(t, "statements", err)
+		}
+		if len(requireArrayField(t, resp, "accounts")) == 0 {
+			t.Fatal("statements.list returned no accounts")
+		}
+	})
+}
+
 func TestLiveSandboxPaymentInitiationSuite(t *testing.T) {
 	cfg := loadLiveSandboxConfig(t)
 
@@ -1573,6 +1705,16 @@ func (h *liveSandboxHarness) createUser(prefix string, withIdentity bool) string
 func (h *liveSandboxHarness) createSandboxItem(cfg liveSandboxConfig, products []string, extraArgs ...string) liveSandboxItem {
 	h.t.Helper()
 
+	item, err := h.tryCreateSandboxItem(cfg, products, extraArgs...)
+	if err != nil {
+		h.t.Fatal(err)
+	}
+	return item
+}
+
+func (h *liveSandboxHarness) tryCreateSandboxItem(cfg liveSandboxConfig, products []string, extraArgs ...string) (liveSandboxItem, error) {
+	h.t.Helper()
+
 	createArgs := []string{
 		"sandbox",
 		"public-token-create",
@@ -1582,7 +1724,10 @@ func (h *liveSandboxHarness) createSandboxItem(cfg liveSandboxConfig, products [
 	for _, product := range products {
 		createArgs = append(createArgs, "--product", product)
 	}
-	publicTokenResp := h.mustRunJSON(createArgs...)
+	publicTokenResp, err := h.runJSON(createArgs...)
+	if err != nil {
+		return liveSandboxItem{}, err
+	}
 	publicToken := requireStringField(h.t, publicTokenResp, "public_token")
 
 	exchangeArgs := []string{
@@ -1593,13 +1738,16 @@ func (h *liveSandboxHarness) createSandboxItem(cfg liveSandboxConfig, products [
 	for _, product := range products {
 		exchangeArgs = append(exchangeArgs, "--product", product)
 	}
-	exchangeResp := h.mustRunJSON(exchangeArgs...)
+	exchangeResp, err := h.runJSON(exchangeArgs...)
+	if err != nil {
+		return liveSandboxItem{}, err
+	}
 	item := liveSandboxItem{
 		ItemID:      requireStringField(h.t, exchangeResp, "item_id"),
 		AccessToken: requireStringField(h.t, exchangeResp, "access_token"),
 	}
 	h.trackItem(item.ItemID, item.AccessToken)
-	return item
+	return item, nil
 }
 
 func (h *liveSandboxHarness) requireItemAccountID(itemID string) string {
@@ -1913,6 +2061,41 @@ func isTransferUnavailableError(err error) bool {
 		strings.Contains(message, "not configured") ||
 		strings.Contains(message, "request access") ||
 		strings.Contains(message, "product")
+}
+
+func isProductUnavailableError(err error) bool {
+	var apiErr *plaid.APIError
+	if !errors.As(err, &apiErr) {
+		return false
+	}
+
+	switch apiErr.ErrorCode {
+	case "PRODUCT_NOT_ENABLED", "PRODUCTS_NOT_SUPPORTED", "INVALID_PRODUCT", "UNAUTHORIZED_ROUTE_ACCESS", "SANDBOX_PRODUCT_NOT_ENABLED":
+		return true
+	}
+
+	message := strings.ToLower(strings.TrimSpace(strings.Join([]string{
+		apiErr.ErrorType,
+		apiErr.ErrorCode,
+		apiErr.ErrorMessage,
+		apiErr.DisplayMessage,
+	}, " ")))
+
+	return strings.Contains(message, "not enabled") ||
+		strings.Contains(message, "not supported") ||
+		strings.Contains(message, "not available") ||
+		strings.Contains(message, "not configured") ||
+		strings.Contains(message, "request access") ||
+		(strings.Contains(message, "product") && strings.Contains(message, "sandbox"))
+}
+
+func skipUnavailableLiveProduct(t *testing.T, label string, err error) {
+	t.Helper()
+
+	if isProductUnavailableError(err) {
+		t.Skipf("skipping %s live coverage: %v", label, err)
+	}
+	t.Fatal(err)
 }
 
 func envTruthy(value string) bool {

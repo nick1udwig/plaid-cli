@@ -36,6 +36,12 @@ This covers the core headless sandbox flow, plus:
 - `transactions refresh`
 - `sandbox processor-token-create`
 - processor `account/auth/balance/identity/transactions/*` reads
+- `identity get`
+- `liabilities get`
+- `investments holdings-get`
+- `investments transactions-get`
+- `signal evaluate`
+- `statements list`
 - broader item-webhook delivery plus `webhook verification-key get`
 - `payment-initiation recipient create`
 - `payment-initiation recipient get/list`
