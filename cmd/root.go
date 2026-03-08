@@ -71,6 +71,7 @@ func NewRootCmd(opts *Options) *cobra.Command {
 	cmd.AddCommand(newBalanceCmd())
 	cmd.AddCommand(newIdentityCmd())
 	cmd.AddCommand(newTransactionsCmd())
+	cmd.AddCommand(newTransferCmd())
 	cmd.AddCommand(newSandboxCmd())
 
 	return cmd

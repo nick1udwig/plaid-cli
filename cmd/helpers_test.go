@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -137,6 +140,258 @@ func TestResolveAccessToken(t *testing.T) {
 			if !strings.Contains(err.Error(), item.ItemID) {
 				t.Fatalf("error = %q, want to mention %q", err, item.ItemID)
 			}
+		}
+	})
+}
+
+func TestResolveAccountID(t *testing.T) {
+	t.Parallel()
+
+	t.Run("uses explicit account id", func(t *testing.T) {
+		t.Parallel()
+
+		accountID, err := resolveAccountID(nil, "acct-explicit")
+		if err != nil {
+			t.Fatalf("resolveAccountID() error = %v", err)
+		}
+		if accountID != "acct-explicit" {
+			t.Fatalf("accountID = %q, want %q", accountID, "acct-explicit")
+		}
+	})
+
+	t.Run("auto-selects the only saved account", func(t *testing.T) {
+		t.Parallel()
+
+		record := &state.ItemRecord{
+			ItemID: "item-1",
+			Accounts: []state.AccountSummary{
+				{AccountID: "acct-1"},
+			},
+		}
+
+		accountID, err := resolveAccountID(record, "")
+		if err != nil {
+			t.Fatalf("resolveAccountID() error = %v", err)
+		}
+		if accountID != "acct-1" {
+			t.Fatalf("accountID = %q, want %q", accountID, "acct-1")
+		}
+	})
+
+	t.Run("fails when no saved item record exists", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := resolveAccountID(nil, "")
+		if err == nil {
+			t.Fatal("resolveAccountID() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "--account-id is required") {
+			t.Fatalf("error = %q, want account-id guidance", err)
+		}
+	})
+
+	t.Run("fails when multiple saved accounts exist", func(t *testing.T) {
+		t.Parallel()
+
+		record := &state.ItemRecord{
+			ItemID: "item-2",
+			Accounts: []state.AccountSummary{
+				{AccountID: "acct-a"},
+				{AccountID: "acct-b"},
+			},
+		}
+
+		_, err := resolveAccountID(record, "")
+		if err == nil {
+			t.Fatal("resolveAccountID() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "acct-a") || !strings.Contains(err.Error(), "acct-b") {
+			t.Fatalf("error = %q, want both account IDs", err)
+		}
+	})
+}
+
+func TestLoadRequestBody(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns empty object for empty input", func(t *testing.T) {
+		t.Parallel()
+
+		body, err := loadRequestBody("")
+		if err != nil {
+			t.Fatalf("loadRequestBody() error = %v", err)
+		}
+		if len(body) != 0 {
+			t.Fatalf("body = %#v, want empty object", body)
+		}
+	})
+
+	t.Run("loads inline JSON object", func(t *testing.T) {
+		t.Parallel()
+
+		body, err := loadRequestBody(`{"access_token":"access-123","user":{"legal_name":"Jane"}}`)
+		if err != nil {
+			t.Fatalf("loadRequestBody() error = %v", err)
+		}
+		want := map[string]any{
+			"access_token": "access-123",
+			"user": map[string]any{
+				"legal_name": "Jane",
+			},
+		}
+		if !reflect.DeepEqual(body, want) {
+			t.Fatalf("body = %#v, want %#v", body, want)
+		}
+	})
+
+	t.Run("loads JSON object from file", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		path := filepath.Join(dir, "request.json")
+		if err := os.WriteFile(path, []byte(`{"amount":"10.00"}`), 0o600); err != nil {
+			t.Fatalf("WriteFile() error = %v", err)
+		}
+
+		body, err := loadRequestBody("@" + path)
+		if err != nil {
+			t.Fatalf("loadRequestBody() error = %v", err)
+		}
+		want := map[string]any{"amount": "10.00"}
+		if !reflect.DeepEqual(body, want) {
+			t.Fatalf("body = %#v, want %#v", body, want)
+		}
+	})
+
+	t.Run("rejects non-object json", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := loadRequestBody(`["not","an","object"]`)
+		if err == nil {
+			t.Fatal("loadRequestBody() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "JSON object") {
+			t.Fatalf("error = %q, want JSON object message", err)
+		}
+	})
+}
+
+func TestSetBodyValue(t *testing.T) {
+	t.Parallel()
+
+	t.Run("creates nested objects", func(t *testing.T) {
+		t.Parallel()
+
+		body := map[string]any{}
+		if err := setBodyValue(body, "Jane Doe", "user", "legal_name"); err != nil {
+			t.Fatalf("setBodyValue() error = %v", err)
+		}
+
+		want := map[string]any{
+			"user": map[string]any{
+				"legal_name": "Jane Doe",
+			},
+		}
+		if !reflect.DeepEqual(body, want) {
+			t.Fatalf("body = %#v, want %#v", body, want)
+		}
+	})
+
+	t.Run("preserves existing nested object", func(t *testing.T) {
+		t.Parallel()
+
+		body := map[string]any{
+			"user": map[string]any{
+				"legal_name": "Jane Doe",
+			},
+		}
+		if err := setBodyValue(body, "jane@example.com", "user", "email_address"); err != nil {
+			t.Fatalf("setBodyValue() error = %v", err)
+		}
+
+		if got, ok := bodyValue(body, "user", "email_address"); !ok || got != "jane@example.com" {
+			t.Fatalf("bodyValue() = %#v, %v; want %q, true", got, ok, "jane@example.com")
+		}
+	})
+
+	t.Run("rejects non-object intermediate field", func(t *testing.T) {
+		t.Parallel()
+
+		body := map[string]any{"user": "not-an-object"}
+		err := setBodyValue(body, "Jane Doe", "user", "legal_name")
+		if err == nil {
+			t.Fatal("setBodyValue() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "user") {
+			t.Fatalf("error = %q, want field name", err)
+		}
+	})
+}
+
+func TestApplyStringFlag(t *testing.T) {
+	t.Parallel()
+
+	t.Run("preserves body value when flag is not changed", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("network", "same-day-ach", "")
+		body := map[string]any{"network": "ach"}
+
+		if err := applyStringFlag(cmd, body, "network", "same-day-ach", "network"); err != nil {
+			t.Fatalf("applyStringFlag() error = %v", err)
+		}
+		if got, _ := bodyValue(body, "network"); got != "ach" {
+			t.Fatalf("body[network] = %#v, want %q", got, "ach")
+		}
+	})
+
+	t.Run("sets default when body does not already define the field", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().String("network", "same-day-ach", "")
+		body := map[string]any{}
+
+		if err := applyStringFlag(cmd, body, "network", "same-day-ach", "network"); err != nil {
+			t.Fatalf("applyStringFlag() error = %v", err)
+		}
+		if got, _ := bodyValue(body, "network"); got != "same-day-ach" {
+			t.Fatalf("body[network] = %#v, want %q", got, "same-day-ach")
+		}
+	})
+}
+
+func TestPopulateTransferAccess(t *testing.T) {
+	t.Parallel()
+
+	t.Run("fills account id from saved item matched by body access token", func(t *testing.T) {
+		t.Parallel()
+
+		store := state.New(t.TempDir())
+		record := state.ItemRecord{
+			ItemID:      "item-transfer",
+			AccessToken: "access-transfer",
+			Accounts: []state.AccountSummary{
+				{AccountID: "acct-transfer"},
+			},
+		}
+		if err := store.SaveItem(record); err != nil {
+			t.Fatalf("SaveItem() error = %v", err)
+		}
+
+		body := map[string]any{
+			"access_token": "access-transfer",
+		}
+		gotRecord, err := populateTransferAccess(&cobra.Command{Use: "test"}, store, body, "", "", "")
+		if err != nil {
+			t.Fatalf("populateTransferAccess() error = %v", err)
+		}
+		if gotRecord == nil || gotRecord.ItemID != record.ItemID {
+			t.Fatalf("record = %#v, want item_id %q", gotRecord, record.ItemID)
+		}
+		if got, ok := bodyValue(body, "account_id"); !ok || got != "acct-transfer" {
+			t.Fatalf("body account_id = %#v, %v; want %q, true", got, ok, "acct-transfer")
 		}
 	})
 }
