@@ -931,14 +931,29 @@ func TestLiveSandboxTransferSuite(t *testing.T) {
 	if got := requireStringField(t, clockGetResp, "test_clock", "test_clock_id"); got != testClockID {
 		t.Fatalf("sandbox transfer test-clock.get test_clock_id = %q, want %q", got, testClockID)
 	}
-	clockListResp := harness.mustRunJSON(
-		"sandbox",
-		"transfer",
-		"test-clock",
-		"list",
-		"--count", "10",
-	)
-	if !arrayContainsMapField(requireArrayField(t, clockListResp, "test_clocks"), "test_clock_id", testClockID) {
+	clockListStart := clockVirtualTime.Add(-1 * time.Second).Format(time.RFC3339)
+	clockListEnd := clockVirtualTime.Add(1 * time.Second).Format(time.RFC3339)
+	foundClockInList := false
+	for attempt := 1; attempt <= 5; attempt++ {
+		clockListResp := harness.mustRunJSON(
+			"sandbox",
+			"transfer",
+			"test-clock",
+			"list",
+			"--start-virtual-time", clockListStart,
+			"--end-virtual-time", clockListEnd,
+			"--count", "25",
+		)
+		if arrayContainsMapField(requireArrayField(t, clockListResp, "test_clocks"), "test_clock_id", testClockID) {
+			foundClockInList = true
+			break
+		}
+		if attempt < 5 {
+			t.Logf("sandbox transfer test-clock.list has not shown test clock %q yet (attempt %d/5); retrying", testClockID, attempt)
+			time.Sleep(2 * time.Second)
+		}
+	}
+	if !foundClockInList {
 		t.Fatalf("sandbox transfer test-clock.list did not include test clock %q", testClockID)
 	}
 
