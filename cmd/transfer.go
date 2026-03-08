@@ -21,6 +21,9 @@ func newTransferCmd() *cobra.Command {
 	cmd.AddCommand(newTransferMetricsCmd())
 	cmd.AddCommand(newTransferCapabilitiesCmd())
 	cmd.AddCommand(newTransferIntentCmd())
+	cmd.AddCommand(newTransferLedgerCmd())
+	cmd.AddCommand(newTransferOriginatorCmd())
+	cmd.AddCommand(newTransferPlatformCmd())
 
 	return cmd
 }

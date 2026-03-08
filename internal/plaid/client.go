@@ -7,7 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -221,6 +224,72 @@ func (c *Client) CallBytes(ctx context.Context, path string, requestBody any) (*
 		Body:    bodyBytes,
 		Headers: headers,
 	}, nil
+}
+
+func (c *Client) CallMultipart(ctx context.Context, path string, fields map[string]string, fileField, filePath string) (map[string]any, error) {
+	var payload bytes.Buffer
+	writer := multipart.NewWriter(&payload)
+
+	for key, value := range fields {
+		if strings.TrimSpace(value) == "" {
+			continue
+		}
+		if err := writer.WriteField(key, value); err != nil {
+			return nil, fmt.Errorf("write multipart field %s: %w", key, err)
+		}
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("open multipart file: %w", err)
+	}
+	defer file.Close()
+
+	part, err := writer.CreateFormFile(fileField, filepath.Base(filePath))
+	if err != nil {
+		return nil, fmt.Errorf("create multipart file field: %w", err)
+	}
+	if _, err := io.Copy(part, file); err != nil {
+		return nil, fmt.Errorf("copy multipart file: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("close multipart writer: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, &payload)
+	if err != nil {
+		return nil, fmt.Errorf("create multipart request: %w", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("PLAID-CLIENT-ID", c.clientID)
+	req.Header.Set("PLAID-SECRET", c.secret)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("send multipart request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read multipart response body: %w", err)
+	}
+	if resp.StatusCode >= http.StatusBadRequest {
+		apiErr := &APIError{StatusCode: resp.StatusCode}
+		if err := json.Unmarshal(bodyBytes, apiErr); err != nil {
+			apiErr.ErrorMessage = string(bodyBytes)
+		}
+		return nil, apiErr
+	}
+
+	var out map[string]any
+	if len(bodyBytes) == 0 {
+		return map[string]any{}, nil
+	}
+	if err := json.Unmarshal(bodyBytes, &out); err != nil {
+		return nil, fmt.Errorf("decode multipart response body: %w", err)
+	}
+	return out, nil
 }
 
 func (c *Client) postJSON(ctx context.Context, path string, requestBody, responseBody any) error {
