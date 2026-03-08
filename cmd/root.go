@@ -79,7 +79,7 @@ func NewRootCmd(opts *Options) *cobra.Command {
 	cmd.AddCommand(newLiabilitiesCmd())
 	cmd.AddCommand(newInvestmentsCmd())
 	cmd.AddCommand(newStatementsCmd())
-	cmd.AddCommand(newBeaconCmd())
+	cmd.AddCommand(newMonitorCmd())
 	cmd.AddCommand(newEnrichCmd())
 	cmd.AddCommand(newInvestmentsMoveCmd())
 	cmd.AddCommand(newPaymentInitiationCmd())
