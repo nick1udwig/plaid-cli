@@ -39,13 +39,13 @@ func validatePIAddress(body map[string]any, label string, path ...string) error 
 		return nil
 	}
 
-	required := map[string][]string{
-		fmt.Sprintf("%s.street", label):      append(append([]string{}, path...), "street"),
-		fmt.Sprintf("%s.city", label):        append(append([]string{}, path...), "city"),
-		fmt.Sprintf("%s.postal_code", label): append(append([]string{}, path...), "postal_code"),
-		fmt.Sprintf("%s.country", label):     append(append([]string{}, path...), "country"),
+	for _, field := range []string{"street", "city", "postal_code", "country"} {
+		if bodyHasValue(body, append(path, field)...) {
+			continue
+		}
+		return fmt.Errorf("%s.%s is required", label, field)
 	}
-	return requireBodyFields(body, required)
+	return nil
 }
 
 func applyPIBACSFlags(cmd *cobra.Command, body map[string]any, account, sortCode, accountFlag, sortCodeFlag string, path ...string) error {
@@ -73,11 +73,13 @@ func validatePIBACS(body map[string]any, label string, path ...string) error {
 		return nil
 	}
 
-	required := map[string][]string{
-		fmt.Sprintf("%s.account", label):   append(append([]string{}, path...), "account"),
-		fmt.Sprintf("%s.sort_code", label): append(append([]string{}, path...), "sort_code"),
+	for _, field := range []string{"account", "sort_code"} {
+		if bodyHasValue(body, append(path, field)...) {
+			continue
+		}
+		return fmt.Errorf("%s.%s is required", label, field)
 	}
-	return requireBodyFields(body, required)
+	return nil
 }
 
 func applyPIAmountFlags(cmd *cobra.Command, body map[string]any, currency, value, currencyFlag, valueFlag string, path ...string) error {
@@ -95,11 +97,13 @@ func validatePIAmount(body map[string]any, label string, path ...string) error {
 		return nil
 	}
 
-	required := map[string][]string{
-		fmt.Sprintf("%s.currency", label): append(append([]string{}, path...), "currency"),
-		fmt.Sprintf("%s.value", label):    append(append([]string{}, path...), "value"),
+	for _, field := range []string{"currency", "value"} {
+		if bodyHasValue(body, append(path, field)...) {
+			continue
+		}
+		return fmt.Errorf("%s.%s is required", label, field)
 	}
-	return requireBodyFields(body, required)
+	return nil
 }
 
 func applyPIConsentPeriodicFlags(cmd *cobra.Command, body map[string]any, currency, value, interval, alignment string) error {

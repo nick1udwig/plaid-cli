@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -47,6 +48,10 @@ type requestBodyFlags struct {
 	body string
 }
 
+type binaryOutputFlags struct {
+	out string
+}
+
 func bindInfoFlags(cmd *cobra.Command) *commandInfoFlags {
 	flags := &commandInfoFlags{}
 	cmd.Flags().BoolVar(&flags.printDocPath, "print-doc-path", false, "Print the local docs path backing this command and exit")
@@ -57,6 +62,12 @@ func bindInfoFlags(cmd *cobra.Command) *commandInfoFlags {
 func bindBodyFlag(cmd *cobra.Command) *requestBodyFlags {
 	flags := &requestBodyFlags{}
 	cmd.Flags().StringVar(&flags.body, "body", "", "Base JSON request body as inline JSON or @path/to/file.json; explicit flags override it")
+	return flags
+}
+
+func bindBinaryOutputFlag(cmd *cobra.Command) *binaryOutputFlags {
+	flags := &binaryOutputFlags{}
+	cmd.Flags().StringVar(&flags.out, "out", "", "Write binary response data to this file path instead of stdout")
 	return flags
 }
 
@@ -74,6 +85,47 @@ func maybeWriteInfo(cmd *cobra.Command, flags *commandInfoFlags, docPath string,
 		return true, writeJSON(cmd, template)
 	}
 	return false, nil
+}
+
+func writeBinaryOutput(cmd *cobra.Command, outPath string, resp *plaid.BinaryResponse) error {
+	if strings.TrimSpace(outPath) == "" {
+		return errors.New("--out is required for binary response commands")
+	}
+	if resp == nil {
+		return errors.New("binary response must not be nil")
+	}
+
+	dir := filepath.Dir(outPath)
+	if dir != "." && dir != "" {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return fmt.Errorf("create output directory: %w", err)
+		}
+	}
+	if err := os.WriteFile(outPath, resp.Body, 0o600); err != nil {
+		return fmt.Errorf("write output file: %w", err)
+	}
+
+	result := map[string]any{
+		"bytes": len(resp.Body),
+		"path":  outPath,
+	}
+	if contentHash := headerValue(resp.Headers, "Plaid-Content-Hash"); contentHash != "" {
+		result["plaid_content_hash"] = contentHash
+	}
+	if requestID := headerValue(resp.Headers, "Plaid-Request-ID"); requestID != "" {
+		result["request_id"] = requestID
+	}
+	return writeJSON(cmd, result)
+}
+
+func headerValue(headers map[string][]string, key string) string {
+	for existingKey, values := range headers {
+		if !strings.EqualFold(existingKey, key) || len(values) == 0 {
+			continue
+		}
+		return values[0]
+	}
+	return ""
 }
 
 func loadClientFromState(cmd *cobra.Command) (*state.Store, state.AppProfile, *plaid.Client, error) {

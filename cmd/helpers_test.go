@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"plaid-cli/internal/plaid"
 	"plaid-cli/internal/state"
 
 	"github.com/spf13/cobra"
@@ -272,6 +274,63 @@ func TestLoadRequestBody(t *testing.T) {
 		}
 		if !strings.Contains(err.Error(), "JSON object") {
 			t.Fatalf("error = %q, want JSON object message", err)
+		}
+	})
+}
+
+func TestWriteBinaryOutput(t *testing.T) {
+	t.Parallel()
+
+	t.Run("writes file and emits metadata json", func(t *testing.T) {
+		t.Parallel()
+
+		dir := t.TempDir()
+		outPath := filepath.Join(dir, "reports", "report.pdf")
+		cmd := &cobra.Command{Use: "test"}
+		buf := &bytes.Buffer{}
+		cmd.SetOut(buf)
+
+		resp := &plaid.BinaryResponse{
+			Body: []byte("%PDF-1.7"),
+			Headers: map[string][]string{
+				"Plaid-Content-Hash": {"sha256:abc123"},
+				"Plaid-Request-ID":   {"req-123"},
+			},
+		}
+
+		if err := writeBinaryOutput(cmd, outPath, resp); err != nil {
+			t.Fatalf("writeBinaryOutput() error = %v", err)
+		}
+
+		got, err := os.ReadFile(outPath)
+		if err != nil {
+			t.Fatalf("ReadFile() error = %v", err)
+		}
+		if string(got) != "%PDF-1.7" {
+			t.Fatalf("file contents = %q, want PDF bytes", got)
+		}
+
+		output := buf.String()
+		if !strings.Contains(output, `"path": "`+outPath+`"`) {
+			t.Fatalf("output = %q, want path metadata", output)
+		}
+		if !strings.Contains(output, `"plaid_content_hash": "sha256:abc123"`) {
+			t.Fatalf("output = %q, want content hash metadata", output)
+		}
+		if !strings.Contains(output, `"request_id": "req-123"`) {
+			t.Fatalf("output = %q, want request_id metadata", output)
+		}
+	})
+
+	t.Run("requires output path", func(t *testing.T) {
+		t.Parallel()
+
+		err := writeBinaryOutput(&cobra.Command{}, "", &plaid.BinaryResponse{})
+		if err == nil {
+			t.Fatal("writeBinaryOutput() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "--out is required") {
+			t.Fatalf("error = %q, want out guidance", err)
 		}
 	})
 }

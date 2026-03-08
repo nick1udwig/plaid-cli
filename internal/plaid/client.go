@@ -50,6 +50,11 @@ type Client struct {
 	httpClient *http.Client
 }
 
+type BinaryResponse struct {
+	Body    []byte
+	Headers http.Header
+}
+
 type CreateHostedLinkTokenInput struct {
 	ClientName   string
 	Language     string
@@ -207,37 +212,21 @@ func (c *Client) Call(ctx context.Context, path string, requestBody any) (map[st
 	return out, nil
 }
 
+func (c *Client) CallBytes(ctx context.Context, path string, requestBody any) (*BinaryResponse, error) {
+	bodyBytes, headers, err := c.post(ctx, path, requestBody)
+	if err != nil {
+		return nil, err
+	}
+	return &BinaryResponse{
+		Body:    bodyBytes,
+		Headers: headers,
+	}, nil
+}
+
 func (c *Client) postJSON(ctx context.Context, path string, requestBody, responseBody any) error {
-	payload, err := json.Marshal(requestBody)
+	bodyBytes, _, err := c.post(ctx, path, requestBody)
 	if err != nil {
-		return fmt.Errorf("marshal request body: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(payload))
-	if err != nil {
-		return fmt.Errorf("create request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("PLAID-CLIENT-ID", c.clientID)
-	req.Header.Set("PLAID-SECRET", c.secret)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("read response body: %w", err)
-	}
-
-	if resp.StatusCode >= http.StatusBadRequest {
-		apiErr := &APIError{StatusCode: resp.StatusCode}
-		if err := json.Unmarshal(bodyBytes, apiErr); err != nil {
-			apiErr.ErrorMessage = string(bodyBytes)
-		}
-		return apiErr
+		return err
 	}
 
 	if responseBody == nil || len(bodyBytes) == 0 {
@@ -247,6 +236,42 @@ func (c *Client) postJSON(ctx context.Context, path string, requestBody, respons
 		return fmt.Errorf("decode response body: %w", err)
 	}
 	return nil
+}
+
+func (c *Client) post(ctx context.Context, path string, requestBody any) ([]byte, http.Header, error) {
+	payload, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, nil, fmt.Errorf("marshal request body: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(payload))
+	if err != nil {
+		return nil, nil, fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("PLAID-CLIENT-ID", c.clientID)
+	req.Header.Set("PLAID-SECRET", c.secret)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, nil, fmt.Errorf("send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, fmt.Errorf("read response body: %w", err)
+	}
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		apiErr := &APIError{StatusCode: resp.StatusCode}
+		if err := json.Unmarshal(bodyBytes, apiErr); err != nil {
+			apiErr.ErrorMessage = string(bodyBytes)
+		}
+		return nil, nil, apiErr
+	}
+
+	return bodyBytes, resp.Header.Clone(), nil
 }
 
 func baseURLForEnv(env string) (string, error) {
