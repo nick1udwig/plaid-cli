@@ -497,6 +497,36 @@ func TestRequireExactlyOneBodyField(t *testing.T) {
 	})
 }
 
+func TestRequireAtLeastOneBodyField(t *testing.T) {
+	t.Parallel()
+
+	fields := map[string][]string{
+		"--iban":         {"iban"},
+		"--bacs-account": {"bacs", "account"},
+	}
+
+	t.Run("accepts when a field is present", func(t *testing.T) {
+		t.Parallel()
+
+		body := map[string]any{"iban": "GB33BUKB20201555555555"}
+		if err := requireAtLeastOneBodyField(body, fields); err != nil {
+			t.Fatalf("requireAtLeastOneBodyField() error = %v", err)
+		}
+	})
+
+	t.Run("rejects when no field is present", func(t *testing.T) {
+		t.Parallel()
+
+		err := requireAtLeastOneBodyField(map[string]any{}, fields)
+		if err == nil {
+			t.Fatal("requireAtLeastOneBodyField() error = nil, want error")
+		}
+		if !strings.Contains(err.Error(), "--iban") || !strings.Contains(err.Error(), "--bacs-account") {
+			t.Fatalf("error = %q, want both field labels", err)
+		}
+	})
+}
+
 func TestLoadClientFromStateRequiresInit(t *testing.T) {
 	t.Parallel()
 

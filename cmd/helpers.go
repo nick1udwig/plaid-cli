@@ -337,3 +337,16 @@ func requireExactlyOneBodyField(body map[string]any, fields map[string][]string)
 	sort.Strings(labels)
 	return fmt.Errorf("provide exactly one of %s", strings.Join(labels, ", "))
 }
+
+func requireAtLeastOneBodyField(body map[string]any, fields map[string][]string) error {
+	labels := make([]string, 0, len(fields))
+	for label, path := range fields {
+		labels = append(labels, label)
+		if bodyHasValue(body, path...) {
+			return nil
+		}
+	}
+
+	sort.Strings(labels)
+	return fmt.Errorf("provide at least one of %s", strings.Join(labels, ", "))
+}
