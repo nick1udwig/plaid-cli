@@ -236,7 +236,7 @@ func newTransferPlatformPersonCreateCmd() *cobra.Command {
 			if err := applyStringFlag(cmd, body, "title", title, "title"); err != nil {
 				return err
 			}
-			if err := applyIntFlag(cmd, body, "ownership-percentage", ownershipPercentage, "ownership_percentage"); err != nil {
+			if err := applyOptionalIntFlag(cmd, body, "ownership-percentage", ownershipPercentage, "ownership_percentage"); err != nil {
 				return err
 			}
 			if err := requireBodyFields(body, map[string][]string{

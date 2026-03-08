@@ -71,3 +71,19 @@ plaid wallet transaction execute --wallet-id YOUR_WALLET_ID --idempotency-key tx
 ## Local Docs Snapshot
 
 Plaid's docs are mirrored under [docs/plaid/](docs/plaid/) for implementation reference.
+
+## Testing
+
+Run the standard test suite:
+
+```bash
+just test
+```
+
+Run the live Plaid sandbox smoke suite:
+
+```bash
+just test-live
+```
+
+The live suite is gated behind `PLAID_RUN_LIVE_TESTS=1`, uses a temporary state directory instead of `~/.plaid-cli`, and removes the sandbox Item it creates. It reads sandbox creds from `PLAID_SANDBOX_CLIENT_ID` / `PLAID_SANDBOX_SECRET`, falls back to `PLAID_CLIENT_ID` / `PLAID_SECRET`, and finally falls back to a saved sandbox app profile in `~/.plaid-cli/app-profile.json`.

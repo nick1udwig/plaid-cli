@@ -142,7 +142,7 @@ func newProcessorTransactionsSyncCmd() *cobra.Command {
 			if err := applyStringFlag(cmd, body, "pfc-version", pfcVersion, "options", "personal_finance_category_version"); err != nil {
 				return err
 			}
-			if err := applyIntFlag(cmd, body, "days-requested", daysRequested, "options", "days_requested"); err != nil {
+			if err := applyOptionalIntFlag(cmd, body, "days-requested", daysRequested, "options", "days_requested"); err != nil {
 				return err
 			}
 			if err := requireBodyFields(body, map[string][]string{

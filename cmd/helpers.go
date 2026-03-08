@@ -335,6 +335,15 @@ func applyIntFlag(cmd *cobra.Command, body map[string]any, flagName string, valu
 	return setBodyValue(body, value, path...)
 }
 
+func applyOptionalIntFlag(cmd *cobra.Command, body map[string]any, flagName string, value int, path ...string) error {
+	if !cmd.Flags().Changed(flagName) {
+		if value == 0 || bodyHasValue(body, path...) {
+			return nil
+		}
+	}
+	return setBodyValue(body, value, path...)
+}
+
 func applyBoolFlag(cmd *cobra.Command, body map[string]any, flagName string, value bool, path ...string) error {
 	if !cmd.Flags().Changed(flagName) {
 		return nil

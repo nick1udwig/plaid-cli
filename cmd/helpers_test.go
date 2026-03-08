@@ -421,6 +421,43 @@ func TestApplyStringFlag(t *testing.T) {
 	})
 }
 
+func TestApplyOptionalIntFlag(t *testing.T) {
+	t.Parallel()
+
+	t.Run("does not set zero-value default when flag is unchanged", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().Int("days-requested", 0, "")
+		body := map[string]any{}
+
+		if err := applyOptionalIntFlag(cmd, body, "days-requested", 0, "options", "days_requested"); err != nil {
+			t.Fatalf("applyOptionalIntFlag() error = %v", err)
+		}
+		if _, ok := bodyValue(body, "options", "days_requested"); ok {
+			t.Fatalf("body unexpectedly contains options.days_requested: %#v", body)
+		}
+	})
+
+	t.Run("sets zero when the flag was explicitly provided", func(t *testing.T) {
+		t.Parallel()
+
+		cmd := &cobra.Command{Use: "test"}
+		cmd.Flags().Int("days-requested", 0, "")
+		if err := cmd.Flags().Set("days-requested", "0"); err != nil {
+			t.Fatalf("Set() error = %v", err)
+		}
+		body := map[string]any{}
+
+		if err := applyOptionalIntFlag(cmd, body, "days-requested", 0, "options", "days_requested"); err != nil {
+			t.Fatalf("applyOptionalIntFlag() error = %v", err)
+		}
+		if got, ok := bodyValue(body, "options", "days_requested"); !ok || got != 0 {
+			t.Fatalf("bodyValue() = %#v, %v; want 0, true", got, ok)
+		}
+	})
+}
+
 func TestApplyDecimalStringFlag(t *testing.T) {
 	t.Parallel()
 
