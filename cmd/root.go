@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const setupDocPath = "docs/getting-started.md"
+const setupDocPath = "https://github.com/nick1udwig/plaid-cli/blob/master/docs/getting-started.md"
 
 type Options struct {
 	Stdout        io.Writer
@@ -53,7 +53,7 @@ func NewRootCmd(opts *Options) *cobra.Command {
 			"plaid is a single-owner CLI for working with the Plaid API.\n\n"+
 				"Persistent state is stored under ~/.plaid-cli by default.\n"+
 				"Humans should complete one-time setup with `plaid init` before using Link.\n"+
-				"See %s in this repo for setup details.",
+				"See %s for setup details.",
 			setupDocPath,
 		),
 	}
