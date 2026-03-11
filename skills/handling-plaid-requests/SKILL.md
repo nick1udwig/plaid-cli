@@ -24,6 +24,14 @@ If Plaid is not configured or no Items are linked, stop and route the human thro
 
 The agent may invoke `plaid link connect`, but the human still has to complete the browser interaction.
 
+## Key Terms
+
+- `Item`: a saved Plaid connection to one institution login. In practice, this is usually the agent's starting point for most reads.
+- `Account`: an individual financial account inside an Item, such as checking, savings, credit card, or loan.
+- `Institution`: the bank or fintech behind the Item, such as Chase or Bank of America.
+- `Product`: a Plaid capability family, such as Auth, Balance, Transactions, Identity, Signal, or Transfer.
+- `Link`: Plaid's browser-based flow for creating a new Item.
+
 ## Workflow
 
 1. Start with local state:
