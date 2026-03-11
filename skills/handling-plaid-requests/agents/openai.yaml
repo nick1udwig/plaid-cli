@@ -1,0 +1,4 @@
+interface:
+  display_name: "Handle Plaid Requests"
+  short_description: "Run plaid-cli for user requests"
+  default_prompt: "Use $handling-plaid-requests to fulfill this Plaid-related user request by operating plaid-cli directly."
