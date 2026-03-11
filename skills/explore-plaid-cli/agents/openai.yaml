@@ -1,0 +1,4 @@
+interface:
+  display_name: "Explore Plaid CLI"
+  short_description: "Use-case playbooks for plaid-cli"
+  default_prompt: "Use $explore-plaid-cli to suggest concrete plaid-cli flows and commands for this task."
