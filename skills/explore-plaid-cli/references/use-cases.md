@@ -2,6 +2,12 @@
 
 Use these playbooks when the user wants concrete ways to exercise the CLI by hand. All commands are one-liners.
 
+## Shell prerequisites
+
+Use `plaid` if the binary is already on `PATH`. Otherwise replace `plaid` with `go run .`.
+
+Examples that capture IDs from JSON use `jq`. If `jq` is unavailable, either install it first or run the command without shell capture and inspect the JSON manually.
+
 ## Sandbox bootstrap
 
 Use this when the user wants a safe scratch environment without touching `~/.plaid-cli`.
@@ -31,10 +37,11 @@ plaid --state-dir /tmp/plaid-play balance get --item "$ITEM_ID"
 Use this when the user wants an agent-style read loop plus a sandbox mutation that creates a visible delta.
 
 ```bash
+TODAY=$(date -u +%F)
 plaid --state-dir /tmp/plaid-play transactions sync --item "$ITEM_ID"
-plaid --state-dir /tmp/plaid-play transactions get --item "$ITEM_ID" --start-date 2025-01-01 --end-date 2026-12-31
+plaid --state-dir /tmp/plaid-play transactions get --item "$ITEM_ID" --start-date 2024-01-01 --end-date "$TODAY"
 plaid --state-dir /tmp/plaid-play transactions recurring-get --item "$ITEM_ID"
-plaid --state-dir /tmp/plaid-play sandbox transactions-create --item "$ITEM_ID" --account-id "$ACCOUNT_ID" --transaction-id demo_txn_1 --date-transacted 2026-03-01 --date-posted 2026-03-01 --amount 12.34 --description "manual sandbox test" --currency USD
+plaid --state-dir /tmp/plaid-play sandbox transactions-create --item "$ITEM_ID" --account-id "$ACCOUNT_ID" --transaction-id demo_txn_1 --date-transacted "$TODAY" --date-posted "$TODAY" --amount 12.34 --description "manual sandbox test" --currency USD
 plaid --state-dir /tmp/plaid-play transactions sync --item "$ITEM_ID"
 ```
 
@@ -75,9 +82,10 @@ Use this only when the user has Transfer enabled and wants live balance-changing
 
 ```bash
 plaid --state-dir /tmp/plaid-play transfer capabilities get --item "$ITEM_ID" --account-id "$ACCOUNT_ID"
-plaid --state-dir /tmp/plaid-play transfer create --print-request-template
-plaid --state-dir /tmp/plaid-play transfer authorization create --help
-plaid --state-dir /tmp/plaid-play transfer create --help
+AUTHORIZATION_ID=$(plaid --state-dir /tmp/plaid-play transfer authorization create --item "$ITEM_ID" --account-id "$ACCOUNT_ID" --type debit --network ach --ach-class ppd --amount 1.00 --legal-name "Plaid CLI Sandbox" | jq -r '.authorization.id')
+TRANSFER_ID=$(plaid --state-dir /tmp/plaid-play transfer create --item "$ITEM_ID" --account-id "$ACCOUNT_ID" --authorization-id "$AUTHORIZATION_ID" --amount 1.00 --description "sandbox transfer" | jq -r '.transfer.id')
+plaid --state-dir /tmp/plaid-play sandbox transfer simulate --transfer-id "$TRANSFER_ID" --event-type posted
+plaid --state-dir /tmp/plaid-play transfer event list --transfer-id "$TRANSFER_ID"
 ```
 
 Keep move-money flows separate from read-only flows. Mention that transfer setup is product-gated and may require additional dashboard configuration.
