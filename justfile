@@ -2,7 +2,7 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # Build the plaid binary into the repo root.
 build:
-	go build -o plaid .
+	VERSION="$(tr -d '\n' < VERSION)-dev"; go build -ldflags "-X plaid-cli/cmd.version=$VERSION" -o plaid .
 
 # Run the standard Go test suite.
 test:

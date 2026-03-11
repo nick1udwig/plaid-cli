@@ -2,6 +2,11 @@
 
 Single-owner, agent-friendly CLI for the Plaid API.
 
+## Releases
+
+Pushes to `master` publish GitHub release assets for `linux/amd64`, `linux/arm64`, and `darwin/arm64`.
+The tracked base version is in [VERSION](VERSION); the release workflow turns that into a unique patch release on each `master` push.
+
 ## Setup
 
 Humans must complete one-time setup before an agent can use the CLI.

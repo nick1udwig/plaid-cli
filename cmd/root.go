@@ -48,7 +48,7 @@ func NewRootCmd(opts *Options) *cobra.Command {
 		Short:         "Agent-friendly CLI for the Plaid API",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Version:       "0.1.0",
+		Version:       version,
 		Long: fmt.Sprintf(
 			"plaid is a single-owner CLI for working with the Plaid API.\n\n"+
 				"Persistent state is stored under ~/.plaid-cli by default.\n"+
