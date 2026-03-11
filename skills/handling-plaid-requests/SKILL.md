@@ -1,6 +1,6 @@
 ---
 name: handling-plaid-requests
-description: Handles end-user Plaid requests by running the repo's `plaid` CLI and interpreting the results. Use when the user asks about linked accounts, balances, routing details, transactions, spending summaries, recurring payments, institution matches, risk checks, or money movement, including requests like "how much do I have in Chase?" or "summarize my last 3 months of spending by category."
+description: Handles end-user Plaid requests by running the repo's `plaid` CLI and interpreting the results. Use when the user asks about linked accounts, balances, routing details, transactions, spending summaries, recurring payments, institution matches, risk checks, or money movement.
 ---
 
 # Handling Plaid Requests
@@ -20,7 +20,7 @@ If Plaid is not configured or no Items are linked, stop and route the human thro
 
 - `plaid init` for one-time app credentials
 - `plaid link connect` for the initial Hosted Link browser flow
-- `docs/getting-started.md` for exact setup instructions
+- https://github.com/nick1udwig/plaid-cli/blob/master/docs/getting-started.md for exact setup instructions
 
 The agent may invoke `plaid link connect`, but the human still has to complete the browser interaction.
 
@@ -131,7 +131,7 @@ Map the user's request directly to the matching product command and summarize th
 - statements -> `plaid statements list`, `plaid statements download`
 - institution discovery -> `plaid institution get`, `plaid institution search`
 
-Use `plaid <command> --help` or the mirrored docs in `docs/plaid/` only when the exact flags are unclear.
+Use `plaid <command> --help` only when the exact flags are unclear.
 
 ### Risk checks before moving money
 
@@ -201,9 +201,3 @@ If Transfer is not enabled, say so directly instead of improvising a workaround.
 - Include exact figures and date ranges.
 - State assumptions and ambiguities.
 - Offer a concise follow-up only when it is genuinely useful.
-
-## Useful Paths
-
-- `docs/getting-started.md`
-- `docs/live-test-setup.md`
-- `docs/plaid/`
