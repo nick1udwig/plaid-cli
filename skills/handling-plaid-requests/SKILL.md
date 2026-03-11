@@ -11,8 +11,31 @@ Use this skill when the agent should satisfy a user's Plaid-related request by r
 
 - Run the CLI yourself for normal user requests.
 - Ask the human to do work by hand only for one-time setup and browser-based account linking.
-- Use `plaid` if it is on `PATH`; otherwise use `go run .`.
+- Resolve the CLI in this order:
+  1. `which plaid`
+  2. `scripts/plaid`
+  3. if neither exists, download the latest release binary for the current platform to `scripts/plaid`
 - Prefer the existing local state in `~/.plaid-cli`. Use `--state-dir` only for intentionally isolated scratch work.
+
+When step 3 is needed, use this sequence:
+
+```bash
+tag=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/nick1udwig/plaid-cli/releases/latest | awk -F/ '{print $NF}')
+version="${tag#v}"
+case "$(uname -s):$(uname -m)" in
+  Linux:x86_64) asset="plaid_${version}_linux_amd64.tar.gz" ;;
+  Linux:aarch64|Linux:arm64) asset="plaid_${version}_linux_arm64.tar.gz" ;;
+  Darwin:arm64) asset="plaid_${version}_darwin_arm64.tar.gz" ;;
+  *) echo "unsupported platform: $(uname -s):$(uname -m)" >&2; exit 1 ;;
+esac
+tmpdir=$(mktemp -d)
+mkdir -p scripts
+curl -fsSL "https://github.com/nick1udwig/plaid-cli/releases/download/${tag}/${asset}" -o "$tmpdir/$asset"
+tar -xzf "$tmpdir/$asset" -C "$tmpdir"
+mv "$tmpdir"/plaid_*/plaid scripts/plaid
+chmod 0755 scripts/plaid
+rm -rf "$tmpdir"
+```
 
 ## Setup Gate
 
