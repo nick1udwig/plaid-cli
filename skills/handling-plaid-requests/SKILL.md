@@ -9,6 +9,7 @@ Use this skill when the agent should satisfy a user's Plaid-related request by r
 
 ## Core Rule
 
+- Before doing anything else, check whether `plaid` is installed with `which plaid`.
 - Run the CLI yourself for normal user requests.
 - Ask the human to do work by hand only for one-time setup and browser-based account linking.
 - Resolve the CLI in this order:
@@ -57,14 +58,18 @@ The agent may invoke `plaid link connect`, but the human still has to complete t
 
 ## Workflow
 
-1. Start with local state:
+1. First, check whether `plaid` is installed and resolve the CLI path:
+   - `which plaid`
+   - if that fails, try `scripts/plaid`
+   - if that also fails, install `scripts/plaid` from the latest GitHub release
+2. Start with local state:
    - `plaid item list`
-2. Resolve the target Item or account:
+3. Resolve the target Item or account:
    - If the user names an institution, inspect the saved Items and match institution metadata.
    - If the user names an account type, use `plaid account get --item ITEM_ID` and choose the matching account.
-3. Call the narrowest Plaid command that answers the question.
-4. Post-process the JSON locally when the user wants summaries, grouping, or comparisons.
-5. Answer in prose with exact dates, amounts, and assumptions.
+4. Call the narrowest Plaid command that answers the question.
+5. Post-process the JSON locally when the user wants summaries, grouping, or comparisons.
+6. Answer in prose with exact dates, amounts, and assumptions.
 
 ## Safety
 
