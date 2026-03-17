@@ -2,6 +2,20 @@
 
 This CLI is intended for a single human operator who wants to let an agent work with the Plaid API on their behalf.
 
+## Install the CLI
+
+Install the latest release to `~/.local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nick1udwig/plaid-cli/refs/heads/master/install.sh | sh
+```
+
+For a repo-local install, which is useful when an agent should use `scripts/plaid` inside a clone:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nick1udwig/plaid-cli/refs/heads/master/install.sh | sh -s -- -b scripts
+```
+
 ## What You Need
 
 Before the CLI can do anything, the human operator must obtain the Plaid app credentials from the Plaid Dashboard:

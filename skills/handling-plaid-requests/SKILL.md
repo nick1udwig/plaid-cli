@@ -15,28 +15,8 @@ Use this skill when the agent should satisfy a user's Plaid-related request by r
 - Resolve the CLI in this order:
   1. `which plaid`
   2. `scripts/plaid`
-  3. if neither exists, download the latest release binary for the current platform to `scripts/plaid`
+  3. if neither exists, install `scripts/plaid` with `curl -fsSL https://raw.githubusercontent.com/nick1udwig/plaid-cli/refs/heads/master/install.sh | sh -s -- -b scripts`
 - Prefer the existing local state in `~/.plaid-cli`. Use `--state-dir` only for intentionally isolated scratch work.
-
-When step 3 is needed, use this sequence:
-
-```bash
-tag=$(curl -fsSLI -o /dev/null -w '%{url_effective}' https://github.com/nick1udwig/plaid-cli/releases/latest | awk -F/ '{print $NF}')
-version="${tag#v}"
-case "$(uname -s):$(uname -m)" in
-  Linux:x86_64) asset="plaid_${version}_linux_amd64.tar.gz" ;;
-  Linux:aarch64|Linux:arm64) asset="plaid_${version}_linux_arm64.tar.gz" ;;
-  Darwin:arm64) asset="plaid_${version}_darwin_arm64.tar.gz" ;;
-  *) echo "unsupported platform: $(uname -s):$(uname -m)" >&2; exit 1 ;;
-esac
-tmpdir=$(mktemp -d)
-mkdir -p scripts
-curl -fsSL "https://github.com/nick1udwig/plaid-cli/releases/download/${tag}/${asset}" -o "$tmpdir/$asset"
-tar -xzf "$tmpdir/$asset" -C "$tmpdir"
-mv "$tmpdir"/plaid_*/plaid scripts/plaid
-chmod 0755 scripts/plaid
-rm -rf "$tmpdir"
-```
 
 ## Setup Gate
 
@@ -61,7 +41,7 @@ The agent may invoke `plaid link connect`, but the human still has to complete t
 1. First, check whether `plaid` is installed and resolve the CLI path:
    - `which plaid`
    - if that fails, try `scripts/plaid`
-   - if that also fails, install `scripts/plaid` from the latest GitHub release
+   - if that also fails, run `curl -fsSL https://raw.githubusercontent.com/nick1udwig/plaid-cli/refs/heads/master/install.sh | sh -s -- -b scripts`
 2. Start with local state:
    - `plaid item list`
 3. Resolve the target Item or account:

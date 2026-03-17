@@ -2,6 +2,20 @@
 
 Single-owner, agent-friendly CLI for the Plaid API.
 
+## Install
+
+Install the latest release to `~/.local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nick1udwig/plaid-cli/refs/heads/master/install.sh | sh
+```
+
+Install into a repo-local `scripts/` directory instead:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/nick1udwig/plaid-cli/refs/heads/master/install.sh | sh -s -- -b scripts
+```
+
 ## Releases
 
 Pushes to `master` publish GitHub release assets for `linux/amd64`, `linux/arm64`, and `darwin/arm64`.
